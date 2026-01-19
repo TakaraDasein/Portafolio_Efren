@@ -1,22 +1,48 @@
+﻿---
+import '@fontsource/playfair-display'
+import '@fontsource/geist-mono'
+import '../styles/global.css'
+import { ViewTransitions } from 'astro:transitions'
+import ParticlesBackground from '../components/react-islands/particles-background.tsx'
+import SplashCursor from '../components/react-islands/splash-cursor.tsx'
+
+interface Props {
+  title?: string
+  description?: string
+}
+
+const { 
+  title = 'AI-Native Product Builder | Portfolio',
+  description = 'System Architect & Interface Designer crafting intelligent digital experiences'
+} = Astro.props
+---
+
 <!doctype html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
-	</head>
-	<body>
-		<slot />
-	</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content={description} />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+    <ViewTransitions />
+  </head>
+  <body class="font-sans antialiased overflow-x-hidden">
+    <SplashCursor client:load />
+    <ParticlesBackground client:load density={0.00008} />
+    <div class="noise-overlay"></div>
+    <slot />
+    <script>
+      import { inject } from '@vercel/analytics'
+      inject()
+    </script>
+  </body>
 </html>
 
-<style>
-	html,
-	body {
-		margin: 0;
-		width: 100%;
-		height: 100%;
-	}
+<style is:global>
+  :root {
+    --font-playfair: 'Playfair Display', 'Georgia', serif;
+    --font-geist-mono: 'Geist Mono', 'Geist Mono Fallback', monospace;
+  }
 </style>

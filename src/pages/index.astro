@@ -1,11 +1,27 @@
+﻿---
+import Layout from '../layouts/Layout.astro'
+import Navbar from '../components/react-islands/navbar.tsx'
+import Hero from '../components/react-islands/hero.tsx'
+import About from '../components/react-islands/about.tsx'
+import Portfolio from '../components/react-islands/portfolio.tsx'
+import Works from '../components/react-islands/works.tsx'
+import TechMarquee from '../components/react-islands/tech-marquee.tsx'
+import Footer from '../components/react-islands/footer.tsx'
+import SmoothScroll from '../components/react-islands/smooth-scroll.tsx'
+import SectionBlend from '../components/react-islands/section-blend.tsx'
 ---
-import Welcome from '../components/Welcome.astro';
-import Layout from '../layouts/Layout.astro';
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
----
-
-<Layout>
-	<Welcome />
+<Layout title="AI-Native Product Builder | Portfolio">
+  <SmoothScroll client:load>
+    <Navbar client:load />
+    <main>
+      <Hero client:load />
+      <SectionBlend client:load />
+      <About client:visible />
+      <Portfolio client:visible />
+      <Works client:visible />
+      <TechMarquee client:visible />
+      <Footer client:visible />
+    </main>
+  </SmoothScroll>
 </Layout>
