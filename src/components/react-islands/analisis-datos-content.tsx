@@ -1,35 +1,9 @@
 ﻿"use client"
 
 import { motion } from "framer-motion"
+import TableauProjects from "./tableau-projects"
 
 export default function AnalisisDatosContent() {
-  const skills = [
-    { name: "Python", level: 95 },
-    { name: "SQL", level: 90 },
-    { name: "Power BI", level: 88 },
-    { name: "Excel Avanzado", level: 92 },
-    { name: "Tableau", level: 85 },
-    { name: "R", level: 80 },
-  ]
-
-  const projects = [
-    {
-      title: "Dashboard Ejecutivo",
-      description: "Visualización interactiva de KPIs empresariales en tiempo real",
-      tech: ["Power BI", "SQL", "Python"],
-    },
-    {
-      title: "Análisis Predictivo de Ventas",
-      description: "Modelo de forecasting para optimización de inventario",
-      tech: ["Python", "Pandas", "Scikit-learn"],
-    },
-    {
-      title: "ETL Pipeline",
-      description: "Automatización de procesos de extracción y transformación de datos",
-      tech: ["Python", "SQL", "Apache Airflow"],
-    },
-  ]
-
   return (
     <main className="min-h-screen bg-background">
       {/* Hero Section */}
@@ -73,91 +47,8 @@ export default function AnalisisDatosContent() {
         </a>
       </section>
 
-      {/* Skills Section */}
-      <section className="py-24 px-8 md:px-12 border-b border-white/10">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-        >
-          <p className="font-mono text-xs tracking-[0.3em] text-muted-foreground mb-4">02  HABILIDADES</p>
-          <h2 className="font-sans text-3xl md:text-5xl font-light italic mb-16">Herramientas y Tecnologías</h2>
-
-          <div className="grid gap-8 max-w-4xl">
-            {skills.map((skill, index) => (
-              <motion.div
-                key={skill.name}
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1, duration: 0.6 }}
-                className="group"
-              >
-                <div className="flex justify-between items-center mb-3">
-                  <span className="font-mono text-sm tracking-wider">{skill.name}</span>
-                  <span className="font-mono text-xs text-muted-foreground">{skill.level}%</span>
-                </div>
-                <div className="h-1 bg-white/10 relative overflow-hidden">
-                  <motion.div
-                    initial={{ scaleX: 0 }}
-                    whileInView={{ scaleX: skill.level / 100 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: index * 0.1 + 0.3, duration: 1, ease: "easeOut" }}
-                    className="h-full bg-cyan-500 origin-left"
-                  />
-                  <div className="absolute inset-0 bg-cyan-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-      </section>
-
-      {/* Projects Section */}
-      <section className="py-24 px-8 md:px-12 border-b border-white/10">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-        >
-          <p className="font-mono text-xs tracking-[0.3em] text-muted-foreground mb-4">03  PROYECTOS</p>
-          <h2 className="font-sans text-3xl md:text-5xl font-light italic mb-16">Casos de Estudio</h2>
-
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {projects.map((project, index) => (
-              <motion.div
-                key={project.title}
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1, duration: 0.6 }}
-                className="group border border-white/10 p-6 hover:border-cyan-500/50 transition-all duration-300 relative overflow-hidden"
-              >
-                <div className="absolute top-0 right-0 w-20 h-20 border-r-2 border-t-2 border-cyan-500 translate-x-2 -translate-y-2 opacity-0 group-hover:opacity-100 transition-all duration-300" />
-                
-                <h3 className="font-sans text-2xl font-light mb-4 group-hover:text-cyan-500 transition-colors">
-                  {project.title}
-                </h3>
-                <p className="font-mono text-sm text-muted-foreground mb-6">
-                  {project.description}
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {project.tech.map((tech) => (
-                    <span
-                      key={tech}
-                      className="font-mono text-[10px] tracking-wider px-3 py-1 border border-white/20 text-muted-foreground"
-                    >
-                      {tech}
-                    </span>
-                  ))}
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-      </section>
+      {/* Tableau Dashboards Section */}
+      <TableauProjects />
 
       {/* CTA Section */}
       <section className="py-24 px-8 md:px-12 text-center">
