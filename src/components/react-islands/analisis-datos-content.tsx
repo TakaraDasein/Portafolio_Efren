@@ -1,7 +1,85 @@
 ﻿"use client"
 
 import { motion } from "framer-motion"
-import TableauProjects from "./tableau-projects"
+import ProjectsShowcase from "./projects-showcase"
+
+const tableauProjects = [
+  {
+    id: "1",
+    title: "Análisis de Sostenibilidad Fresota - Cauca",
+    description: "Dashboard socio-ambiental que evalúa indicadores de sostenibilidad en la región del Cauca, integrando variables ambientales y sociales para la toma de decisiones estratégicas",
+    embedUrl: "https://public.tableau.com/views/AnlisisdeSostenibilidadFresota-CaucaSocio-ambiental/0_InfoGe?:embed=y&:display_count=yes&:showVizHome=no",
+    tags: ["Sostenibilidad", "Medio Ambiente", "Social"],
+    featured: true,
+    thumbnail: "/proyectos/8.fresota.png",
+    type: "tableau" as const
+  },
+  {
+    id: "2",
+    title: "Histórico de Desapariciones en Colombia",
+    description: "Análisis temporal y geográfico de casos de desaparición forzada en Colombia, visualizando patrones, tendencias y zonas críticas para apoyar políticas de prevención",
+    embedUrl: "https://public.tableau.com/views/HistoricodedesaparicionesenColombia/Dashboard1?:embed=y&:display_count=yes&:showVizHome=no",
+    tags: ["Derechos Humanos", "Geoespacial", "Histórico"],
+    thumbnail: "/proyectos/7.historico-desapariciones.png",
+    type: "tableau" as const
+  },
+  {
+    id: "3",
+    title: "Incautación de Cannabis en Colombia 2010-2024",
+    description: "Dashboard interactivo que mapea incautaciones de cannabis a nivel nacional, identificando tendencias temporales, departamentos críticos y evolución del fenómeno",
+    embedUrl: "https://public.tableau.com/views/IncautaciondecannabisenColombia2010-2024/Dashboard1?:embed=y&:display_count=yes&:showVizHome=no",
+    tags: ["Seguridad", "Geográfico", "Series Temporales"],
+    thumbnail: "/proyectos/6.incautacion-weed.png",
+    type: "tableau" as const
+  },
+  {
+    id: "4",
+    title: "Análisis Electoral Popayán 2015-2019",
+    description: "Estudio comparativo de resultados electorales en Popayán, visualizando comportamiento electoral, participación ciudadana y distribución de votos por zonas",
+    embedUrl: "https://public.tableau.com/views/AnlisisElectoralPopayn2015-2019/Dash?:embed=y&:display_count=yes&:showVizHome=no",
+    tags: ["Electoral", "Político", "Comparativo"],
+    thumbnail: "/proyectos/5.analisis-electoral.png",
+    type: "tableau" as const
+  },
+  {
+    id: "5",
+    title: "Presencia de Grupos Armados en Colombia 2023",
+    description: "Geovisor que mapea la presencia y control territorial de grupos armados ilegales, identificando zonas de influencia y riesgos para la población civil",
+    embedUrl: "https://public.tableau.com/views/PresenciadegruposarmadosenColombia2023DataLabConsulting/DataLabConsulting?:embed=y&:display_count=yes&:showVizHome=no",
+    tags: ["Conflicto", "Territorial", "Seguridad"],
+    featured: true,
+    thumbnail: "/proyectos/4.grupos-armados.png",
+    type: "tableau" as const
+  },
+  {
+    id: "6",
+    title: "Geovisor ELC Cauca - OCHA",
+    description: "Herramienta geoespacial desarrollada para la Oficina de Coordinación de Asuntos Humanitarios (OCHA), visualizando variables humanitarias críticas en el Cauca",
+    embedUrl: "https://public.tableau.com/views/GeovisorparaOCHA/Historia1?:embed=y&:display_count=yes&:showVizHome=no",
+    tags: ["Humanitario", "OCHA", "Geoespacial"],
+    thumbnail: "/proyectos/3.ocha.png",
+    type: "tableau" as const
+  },
+  {
+    id: "7",
+    title: "Dashboard de Organizaciones",
+    description: "Análisis integral de organizaciones sociales y comunitarias, incluyendo distribución geográfica, áreas de acción y capacidades operativas",
+    embedUrl: "https://public.tableau.com/views/DashboarddeOrganizaciones/Dashboard1?:embed=y&:display_count=yes&:showVizHome=no",
+    tags: ["Organizaciones", "Social", "Mapeo"],
+    thumbnail: "/proyectos/2.cosurca.png",
+    type: "tableau" as const
+  },
+  {
+    id: "8",
+    title: "Geovisor Multivariado - Riesgo de Reclutamiento Cauca",
+    description: "Análisis multivariado que identifica zonas de riesgo de reclutamiento forzado de niñas, niños y adolescentes en el Cauca 2023, integrando variables sociales, económicas y de conflicto",
+    embedUrl: "https://public.tableau.com/views/DATALABGeovisormultivariadoEND/Historia?:embed=y&:display_count=yes&:showVizHome=no",
+    tags: ["Protección Infantil", "Multivariado", "Riesgo"],
+    featured: true,
+    thumbnail: "/proyectos/1.geovisor-multivariado.png",
+    type: "tableau" as const
+  },
+]
 
 export default function AnalisisDatosContent() {
   return (
@@ -48,7 +126,13 @@ export default function AnalisisDatosContent() {
       </section>
 
       {/* Tableau Dashboards Section */}
-      <TableauProjects />
+      <ProjectsShowcase 
+        projects={tableauProjects}
+        title="Visualizaciones"
+        subtitle="Interactivas"
+        sectionNumber="04 • TABLEAU DASHBOARDS"
+        accentColor="#39cbe3"
+      />
 
       {/* CTA Section */}
       <section className="py-24 px-8 md:px-12 text-center">
@@ -63,7 +147,7 @@ export default function AnalisisDatosContent() {
           </h2>
           <a
             href="/#contact"
-            className="inline-flex items-center gap-2 font-mono text-xs tracking-widest border border-white/20 px-8 py-4 hover:border-cyan-500 hover:text-cyan-500 transition-all duration-300 group"
+            className="inline-flex items-center gap-2 font-mono text-xs tracking-widest border border-white/20 px-8 py-4 hover:border-[#39cbe3] hover:text-[#39cbe3] transition-all duration-300 group"
           >
             CONTACTAR
             <svg
