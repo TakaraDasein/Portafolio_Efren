@@ -6,62 +6,15 @@ import { Leaf, Users, Globe, ShieldAlert, Heart, Landmark } from "lucide-react"
 
 const environmentProjects = [
   {
-    id: "1",
-    title: "Análisis de Sostenibilidad Fresota - Cauca",
-    description: "Dashboard socio-ambiental que evalúa indicadores de sostenibilidad en la región del Cauca, integrando variables ambientales y sociales para la toma de decisiones estratégicas",
-    embedUrl: "https://public.tableau.com/views/AnlisisdeSostenibilidadFresota-CaucaSocio-ambiental/0_InfoGe?:embed=y&:display_count=yes&:showVizHome=no",
-    tags: ["Sostenibilidad", "Medio Ambiente", "Indicadores Sociales", "Tableau"],
+    id: "forestal-1",
+    title: "Densidad Forestal Global 2000-2020",
+    description: "Visualización interactiva que muestra la evolución de la densidad forestal a nivel global entre los años 2000 y 2020. Permite explorar tendencias, comparar regiones y analizar el impacto ambiental a lo largo del tiempo.",
+    embedUrl: "https://densidad-forestal-global-2000-2020.vercel.app/",
+    tags: ["Bosques", "Cambio Climático", "Visualización", "Global"],
     featured: true,
-    thumbnail: "/proyectos/8.fresota.png",
-    type: "tableau" as const
-  },
-  {
-    id: "2",
-    title: "Geovisor Multivariado - Riesgo de Reclutamiento",
-    description: "Análisis multivariado que identifica zonas de riesgo de reclutamiento forzado de niños, niñas y adolescentes en el Cauca 2023, integrando variables sociales, económicas y de conflicto armado",
-    embedUrl: "https://public.tableau.com/views/DATALABGeovisormultivariadoEND/Historia?:embed=y&:display_count=yes&:showVizHome=no",
-    tags: ["Protección Infantil", "Multivariado", "Geoespacial", "Derechos Humanos"],
-    featured: true,
-    thumbnail: "/proyectos/1.geovisor-multivariado.png",
-    type: "tableau" as const
-  },
-  {
-    id: "3",
-    title: "Histórico de Desapariciones en Colombia",
-    description: "Análisis temporal y geográfico de casos de desaparición forzada en Colombia desde 1985, visualizando patrones históricos, tendencias departamentales y zonas críticas para políticas de prevención",
-    embedUrl: "https://public.tableau.com/views/HistoricodedesaparicionesenColombia/Dashboard1?:embed=y&:display_count=yes&:showVizHome=no",
-    tags: ["Derechos Humanos", "Histórico", "Geoespacial", "Series Temporales"],
-    thumbnail: "/proyectos/7.historico-desapariciones.png",
-    type: "tableau" as const
-  },
-  {
-    id: "4",
-    title: "Presencia de Grupos Armados en Colombia 2023",
-    description: "Geovisor que mapea la presencia y control territorial de grupos armados ilegales post-acuerdo de paz, identificando zonas de influencia, disputas territoriales y riesgos para la población civil",
-    embedUrl: "https://public.tableau.com/views/PresenciadegruposarmadosenColombia2023DataLabConsulting/DataLabConsulting?:embed=y&:display_count=yes&:showVizHome=no",
-    tags: ["Conflicto Armado", "Territorial", "Seguridad", "Post-conflicto"],
-    featured: true,
-    thumbnail: "/proyectos/4.grupos-armados.png",
-    type: "tableau" as const
-  },
-  {
-    id: "5",
-    title: "Geovisor ELC Cauca - OCHA",
-    description: "Herramienta geoespacial desarrollada para la Oficina de Coordinación de Asuntos Humanitarios (OCHA), visualizando variables humanitarias críticas, necesidades y respuesta en el departamento del Cauca",
-    embedUrl: "https://public.tableau.com/views/GeovisorparaOCHA/Historia1?:embed=y&:display_count=yes&:showVizHome=no",
-    tags: ["Acción Humanitaria", "OCHA", "Crisis", "Respuesta Humanitaria"],
-    thumbnail: "/proyectos/3.ocha.png",
-    type: "tableau" as const
-  },
-  {
-    id: "6",
-    title: "Dashboard de Organizaciones Sociales",
-    description: "Análisis integral de organizaciones sociales y comunitarias del suroccidente colombiano, incluyendo distribución geográfica, áreas temáticas, capacidades operativas y redes de articulación",
-    embedUrl: "https://public.tableau.com/views/DashboarddeOrganizaciones/Dashboard1?:embed=y&:display_count=yes&:showVizHome=no",
-    tags: ["Sociedad Civil", "Mapeo Organizacional", "Redes", "Participación"],
-    thumbnail: "/proyectos/2.cosurca.png",
-    type: "tableau" as const
-  },
+    thumbnail: "/proyectos/9.densidad-fores.png",
+    type: "web" as const
+  }
 ]
 
 const impactAreas = [
