@@ -1,6 +1,10 @@
 ﻿---
-import '@fontsource/playfair-display'
-import '@fontsource/geist-mono'
+// Importar solo pesos específicos de fuentes para optimización
+import '@fontsource/playfair-display/400.css'
+import '@fontsource/playfair-display/400-italic.css'
+import '@fontsource/playfair-display/700.css'
+import '@fontsource/geist-mono/400.css'
+import '@fontsource/geist-mono/500.css'
 import '../styles/global.css'
 import { ViewTransitions } from 'astro:transitions'
 import ParticlesBackground from '../components/react-islands/particles-background.tsx'
@@ -34,12 +38,17 @@ if (pathname.includes('machine-learning')) {
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="generator" content={Astro.generator} />
+    
+    <!-- Resource hints para mejor performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+    <link rel="dns-prefetch" href="https://vercel.com" />
+    
     <title>{title}</title>
     <ViewTransitions />
   </head>
   <body class="font-sans antialiased overflow-x-hidden">
-    <SplashCursor client:load BACK_COLOR={backColor} />
-    {showParticles && <ParticlesBackground client:load density={0.00008} />}
+    <SplashCursor client:idle BACK_COLOR={backColor} />
+    {showParticles && <ParticlesBackground client:idle density={0.00008} />}
     <div class="noise-overlay"></div>
     <slot />
     <script>

@@ -3,6 +3,11 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Font optimization - display swap for better performance */
+@font-face {
+  font-display: swap;
+}
+
 /* Dark portfolio theme - using dark mode as default */
 :root {
   --background: oklch(0.145 0 0);
@@ -179,8 +184,10 @@
 
 .animate-marquee-left {
   animation: marquee-left 50s linear infinite;
+  will-change: transform;
 }
 
 .animate-marquee-right {
   animation: marquee-right 50s linear infinite;
+  will-change: transform;
 }
