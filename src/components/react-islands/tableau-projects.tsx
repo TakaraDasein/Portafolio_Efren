@@ -16,9 +16,10 @@ interface TableauProject {
 export default function TableauProjects() {
   const [selectedProject, setSelectedProject] = useState<TableauProject | null>(null)
   const [isPanelCollapsed, setIsPanelCollapsed] = useState(false)
+  const [visualizationType, setVisualizationType] = useState<'tableau' | 'powerbi'>('tableau')
 
   // Proyectos de Tableau
-  const projects: TableauProject[] = [
+  const tableauProjects: TableauProject[] = [
     {
       id: "1",
       title: "Análisis de Sostenibilidad Fresota - Cauca",
@@ -88,6 +89,22 @@ export default function TableauProjects() {
     },
   ]
 
+  // Proyectos de Power BI
+  const powerbiProjects: TableauProject[] = [
+    {
+      id: "pb-1",
+      title: "Visualización PAX END",
+      description: "Dashboard integral de PAX END que visualiza métricas clave, análisis de tendencias y reportes operacionales en tiempo real para la toma de decisiones estratégica",
+      embedUrl: "https://app.powerbi.com/reportEmbed?reportId=4b474239-4187-49d7-8b5c-73c2c1360393&autoAuth=true&ctid=e8214937-233b-4b36-86bf-0b5f3337bee1&actionBarEnabled=true&reportCopilotInEmbed=true",
+      tags: ["PAX", "Reportes", "Análisis"],
+      featured: true,
+      thumbnail: "/pax.png"
+    }
+  ]
+
+  // Seleccionar proyectos basado en tipo
+  const projects = visualizationType === 'tableau' ? tableauProjects : powerbiProjects
+
   return (
     <section className="py-24 px-8 md:px-12 border-b border-white/10">
       <motion.div
@@ -97,14 +114,44 @@ export default function TableauProjects() {
         transition={{ duration: 0.8 }}
       >
         <p className="font-mono text-xs tracking-[0.3em] text-muted-foreground mb-4">
-          04  TABLEAU DASHBOARDS
+          04  {visualizationType === 'tableau' ? 'TABLEAU DASHBOARDS' : 'POWER BI DASHBOARDS'}
         </p>
-        <h2 className="font-sans text-3xl md:text-5xl font-light italic mb-4">
-          Visualizaciones <span className="text-cyan-500">Interactivas</span>
-        </h2>
+        <div className="flex flex-col md:flex-row md:items-baseline md:justify-between md:gap-8 mb-4">
+          <h2 className="font-sans text-3xl md:text-5xl font-light italic">
+            Visualizaciones <span className="text-cyan-500">Interactivas</span>
+          </h2>
+          
+          {/* Toggle Button */}
+          <div className="flex items-center gap-3 mt-6 md:mt-0">
+            <button
+              onClick={() => setVisualizationType('tableau')}
+              className={`font-mono text-xs tracking-wider px-4 py-2 border transition-all ${
+                visualizationType === 'tableau'
+                  ? 'border-cyan-500 bg-cyan-500/10 text-cyan-500'
+                  : 'border-white/20 text-muted-foreground hover:border-cyan-500/50'
+              }`}
+            >
+              TABLEAU
+            </button>
+            <div className="w-px h-6 bg-white/10" />
+            <button
+              onClick={() => setVisualizationType('powerbi')}
+              className={`font-mono text-xs tracking-wider px-4 py-2 border transition-all ${
+                visualizationType === 'powerbi'
+                  ? 'border-cyan-500 bg-cyan-500/10 text-cyan-500'
+                  : 'border-white/20 text-muted-foreground hover:border-cyan-500/50'
+              }`}
+            >
+              POWER BI
+            </button>
+          </div>
+        </div>
+        
         <p className="font-mono text-sm text-muted-foreground max-w-3xl mb-16">
-          Explora dashboards interactivos creados con Tableau, diseñados para transformar datos complejos 
-          en historias visuales comprensibles y accionables.
+          {visualizationType === 'tableau' 
+            ? 'Explora dashboards interactivos creados con Tableau, diseñados para transformar datos complejos en historias visuales comprensibles y accionables.'
+            : 'Descubre análisis avanzados desarrollados con Power BI, combinando visualizaciones dinámicas con inteligencia empresarial para mejores decisiones.'
+          }
         </p>
 
         {/* Projects Grid */}

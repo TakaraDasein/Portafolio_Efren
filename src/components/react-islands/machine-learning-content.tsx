@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion"
 import ProjectsShowcase from "./projects-showcase"
+import NeuralBackground from "./neural-background"
 import { Code2, BrainCircuit, Zap, Database, GitBranch, TrendingUp } from "lucide-react"
 
 const mlProjects = [
@@ -131,7 +132,8 @@ export default function MachineLearningContent() {
   return (
     <main className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="relative h-[60vh] flex items-center justify-center border-b border-white/10">
+      <section className="relative h-[60vh] flex items-center justify-center border-b border-white/10 overflow-hidden">
+        <NeuralBackground />
         <div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black opacity-50" />
         
         <motion.div

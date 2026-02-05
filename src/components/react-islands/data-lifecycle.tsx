@@ -26,7 +26,7 @@ const technicalStages = [
     description: "Aplicación de matemáticas y estadística para crear características óptimas que maximicen el rendimiento del modelo",
     methods: ["Normalización", "Encoding", "Dimensionality Reduction", "Data Wrangling"],
     tools: ["Pandas", "NumPy", "Scikit-learn", "R"],
-    color: "#8b5cf6",
+    color: "#39cbe3",
   },
   {
     id: 3,
@@ -36,7 +36,7 @@ const technicalStages = [
     description: "Construcción de modelos predictivos mediante algoritmos avanzados, redes neuronales y métodos estadísticos",
     methods: ["Deep Learning", "Random Forest", "XGBoost", "Neural Networks"],
     tools: ["TensorFlow", "PyTorch", "Keras", "Scikit-learn"],
-    color: "#f59e0b",
+    color: "#39cbe3",
   },
   {
     id: 4,
@@ -46,7 +46,7 @@ const technicalStages = [
     description: "Optimización de hiperparámetros y validación estadística para garantizar precisión y generalización del modelo",
     methods: ["Cross-Validation", "Grid Search", "Metrics Analysis", "Backtesting"],
     tools: ["Python", "R", "Jupyter", "MLflow"],
-    color: "#10b981",
+    color: "#39cbe3",
   },
   {
     id: 5,
@@ -56,7 +56,7 @@ const technicalStages = [
     description: "Implementación de modelos en producción con monitoreo continuo y pipelines automatizados",
     methods: ["CI/CD", "Model Serving", "API Development", "Monitoring"],
     tools: ["Docker", "Kubernetes", "FastAPI", "AWS SageMaker"],
-    color: "#ef4444",
+    color: "#39cbe3",
   },
 ]
 
@@ -80,7 +80,7 @@ const strategicStages = [
     description: "Garantizar calidad y cumplimiento de datos para soportar decisiones críticas de negocio",
     methods: ["Data Quality", "Governance", "Compliance", "Master Data Management"],
     tools: ["Power Query", "Alteryx", "Talend", "Informatica"],
-    color: "#8b5cf6",
+    color: "#39cbe3",
   },
   {
     id: 3,
@@ -90,7 +90,7 @@ const strategicStages = [
     description: "Interpretación de patrones y tendencias para identificar oportunidades de mejora en operaciones y finanzas",
     methods: ["Trend Analysis", "Cohort Analysis", "Financial Modeling", "Market Research"],
     tools: ["Tableau", "Power BI", "Looker", "Google Analytics"],
-    color: "#f59e0b",
+    color: "#39cbe3",
   },
   {
     id: 4,
@@ -100,7 +100,7 @@ const strategicStages = [
     description: "Comunicación efectiva de insights mediante dashboards ejecutivos que impulsan la estrategia empresarial",
     methods: ["Executive Dashboards", "KPI Monitoring", "Report Automation", "Data Presentation"],
     tools: ["Power BI", "Tableau", "Google Data Studio", "Excel"],
-    color: "#10b981",
+    color: "#39cbe3",
   },
   {
     id: 5,
@@ -110,7 +110,7 @@ const strategicStages = [
     description: "Maximizar información para guiar operaciones, I+D y decisiones estratégicas con ROI medible",
     methods: ["Strategic Planning", "ROI Analysis", "Change Management", "Performance Optimization"],
     tools: ["Business Cases", "OKRs", "Analytics", "Reporting Tools"],
-    color: "#ef4444",
+    color: "#39cbe3",
   },
 ]
 

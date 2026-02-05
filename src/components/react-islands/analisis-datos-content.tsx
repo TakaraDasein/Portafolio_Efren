@@ -1,6 +1,7 @@
 ﻿"use client"
 
 import { motion } from "framer-motion"
+import { useState } from "react"
 import ProjectsShowcase from "./projects-showcase"
 
 const tableauProjects = [
@@ -81,7 +82,23 @@ const tableauProjects = [
   },
 ]
 
+const powerbiProjects = [
+  {
+    id: "pb-1",
+    title: "Visualización PAX END",
+    description: "Dashboard integral de PAX END que visualiza métricas clave, análisis de tendencias y reportes operacionales en tiempo real para la toma de decisiones estratégica",
+    embedUrl: "https://app.powerbi.com/reportEmbed?reportId=4b474239-4187-49d7-8b5c-73c2c1360393&autoAuth=true&ctid=e8214937-233b-4b36-86bf-0b5f3337bee1&actionBarEnabled=true&reportCopilotInEmbed=true",
+    tags: ["PAX", "Reportes", "Análisis"],
+    featured: true,
+    thumbnail: "/pax.png",
+    type: "powerbi" as const
+  }
+]
+
 export default function AnalisisDatosContent() {
+  const [visualizationType, setVisualizationType] = useState<'tableau' | 'powerbi'>('tableau')
+  
+  const projects = visualizationType === 'tableau' ? tableauProjects : powerbiProjects
   return (
     <main className="min-h-screen bg-background">
       {/* Hero Section */}
@@ -125,14 +142,63 @@ export default function AnalisisDatosContent() {
         </a>
       </section>
 
-      {/* Tableau Dashboards Section */}
-      <ProjectsShowcase 
-        projects={tableauProjects}
-        title="Visualizaciones"
-        subtitle="Interactivas"
-        sectionNumber="04 • TABLEAU DASHBOARDS"
-        accentColor="#39cbe3"
-      />
+      {/* Visualizaciones Section */}
+      <section className="py-24 px-8 md:px-12 border-b border-white/10">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+        >
+          <p className="font-mono text-xs tracking-[0.3em] text-muted-foreground mb-4">
+            04  {visualizationType === 'tableau' ? 'TABLEAU DASHBOARDS' : 'POWER BI DASHBOARDS'}
+          </p>
+          <h2 className="font-sans text-3xl md:text-5xl font-light italic mb-4">
+            Visualizaciones <span className="text-cyan-500">Interactivas</span>
+          </h2>
+          <p className="font-mono text-sm text-muted-foreground max-w-3xl mb-8">
+            {visualizationType === 'tableau' 
+              ? 'Explora dashboards interactivos creados con Tableau, diseñados para transformar datos complejos en historias visuales comprensibles y accionables.'
+              : 'Descubre análisis avanzados desarrollados con Power BI, combinando visualizaciones dinámicas con inteligencia empresarial para mejores decisiones.'
+            }
+          </p>
+          
+          {/* Toggle Button */}
+          <div className="flex items-center gap-3 mb-12">
+            <button
+              onClick={() => setVisualizationType('tableau')}
+              className={`font-mono text-xs tracking-wider px-4 py-2 border transition-all ${
+                visualizationType === 'tableau'
+                  ? 'border-cyan-500 bg-cyan-500/10 text-cyan-500'
+                  : 'border-white/20 text-muted-foreground hover:border-cyan-500/50'
+              }`}
+            >
+              TABLEAU
+            </button>
+            <div className="w-px h-6 bg-white/10" />
+            <button
+              onClick={() => setVisualizationType('powerbi')}
+              className={`font-mono text-xs tracking-wider px-4 py-2 border transition-all ${
+                visualizationType === 'powerbi'
+                  ? 'border-cyan-500 bg-cyan-500/10 text-cyan-500'
+                  : 'border-white/20 text-muted-foreground hover:border-cyan-500/50'
+              }`}
+            >
+              POWER BI
+            </button>
+          </div>
+        </motion.div>
+
+        {/* Projects Showcase */}
+        <ProjectsShowcase 
+          projects={projects}
+          title="Visualizaciones"
+          subtitle="Interactivas"
+          sectionNumber={visualizationType === 'tableau' ? "04 • TABLEAU DASHBOARDS" : "04 • POWER BI DASHBOARDS"}
+          accentColor="#39cbe3"
+          hideHeader={true}
+        />
+      </section>
 
       {/* CTA Section */}
       <section className="py-24 px-8 md:px-12 text-center">

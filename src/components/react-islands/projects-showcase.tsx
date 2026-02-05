@@ -21,6 +21,7 @@ interface ProjectsShowcaseProps {
   subtitle: string
   sectionNumber: string
   accentColor?: string
+  hideHeader?: boolean
 }
 
 export default function ProjectsShowcase({ 
@@ -28,7 +29,8 @@ export default function ProjectsShowcase({
   title, 
   subtitle, 
   sectionNumber,
-  accentColor = "#39cbe3"
+  accentColor = "#39cbe3",
+  hideHeader = false
 }: ProjectsShowcaseProps) {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const [isPanelCollapsed, setIsPanelCollapsed] = useState(false)
@@ -72,23 +74,27 @@ export default function ProjectsShowcase({
   }
 
   return (
-    <section className="py-24 px-8 md:px-12 border-b border-white/10">
+    <section className={hideHeader ? "" : "py-24 px-8 md:px-12 border-b border-white/10"}>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.8 }}
       >
-        <p className="font-mono text-xs tracking-[0.3em] text-muted-foreground mb-4">
-          {sectionNumber}
-        </p>
-        <h2 className="font-sans text-3xl md:text-5xl font-light italic mb-4">
-          {title} <span style={{ color: accentColor }}>{subtitle}</span>
-        </h2>
-        <p className="font-mono text-sm text-muted-foreground max-w-3xl mb-16">
-          Explora proyectos desarrollados con metodología rigurosa, diseñados para resolver desafíos reales 
-          mediante técnicas avanzadas de análisis y modelado.
-        </p>
+        {!hideHeader && (
+          <>
+            <p className="font-mono text-xs tracking-[0.3em] text-muted-foreground mb-4">
+              {sectionNumber}
+            </p>
+            <h2 className="font-sans text-3xl md:text-5xl font-light italic mb-4">
+              {title} <span style={{ color: accentColor }}>{subtitle}</span>
+            </h2>
+            <p className="font-mono text-sm text-muted-foreground max-w-3xl mb-16">
+              Explora proyectos desarrollados con metodología rigurosa, diseñados para resolver desafíos reales 
+              mediante técnicas avanzadas de análisis y modelado.
+            </p>
+          </>
+        )}
 
         {/* Projects Grid */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-12">

@@ -15,6 +15,15 @@ const {
   title = 'AI-Native Product Builder | Portfolio',
   description = 'System Architect & Interface Designer crafting intelligent digital experiences'
 } = Astro.props
+
+const pathname = Astro.url.pathname;
+let backColor = { r: 0, g: 0, b: 1 }; // blue
+const showParticles = !pathname.includes('machine-learning'); // No mostrar partículas en ML
+if (pathname.includes('machine-learning')) {
+  backColor = { r: 1, g: 0, b: 0 }; // red
+} else if (pathname.includes('medio-ambiente-sociedad')) {
+  backColor = { r: 0, g: 1, b: 0 }; // green
+}
 ---
 
 <!doctype html>
@@ -29,8 +38,8 @@ const {
     <ViewTransitions />
   </head>
   <body class="font-sans antialiased overflow-x-hidden">
-    <SplashCursor client:load />
-    <ParticlesBackground client:load density={0.00008} />
+    <SplashCursor client:load BACK_COLOR={backColor} />
+    {showParticles && <ParticlesBackground client:load density={0.00008} />}
     <div class="noise-overlay"></div>
     <slot />
     <script>

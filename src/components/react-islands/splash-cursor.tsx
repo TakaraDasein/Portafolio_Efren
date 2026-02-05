@@ -14,7 +14,7 @@ function SplashCursor({
   SPLAT_FORCE = 6000,
   SHADING = true,
   COLOR_UPDATE_SPEED = 10,
-  BACK_COLOR = { r: 0.5, g: 0, b: 0 },
+  BACK_COLOR = { r: 0, g: 0, b: 1 },
   TRANSPARENT = true
 }) {
   const canvasRef = useRef(null);
@@ -881,13 +881,32 @@ function SplashCursor({
     }
 
     function generateColor() {
-      // Paleta de colores de la web: cyan (#39cbe3) y grises
+      const baseColor = config.BACK_COLOR;
+      
+      // Si es azul (home), usar la paleta cyan original de la web
+      if (baseColor.r === 0 && baseColor.g === 0 && baseColor.b === 1) {
+        const colors = [
+          { r: 57 / 255, g: 203 / 255, b: 227 / 255 },   // Cyan principal
+          { r: 100 / 255, g: 220 / 255, b: 235 / 255 },  // Cyan claro
+          { r: 30 / 255, g: 150 / 255, b: 180 / 255 },   // Cyan oscuro
+          { r: 0.5, g: 0.5, b: 0.6 },                     // Gris azulado
+          { r: 0.3, g: 0.3, b: 0.4 },                     // Gris oscuro azulado
+        ];
+        
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        return {
+          r: color.r * 0.032,
+          g: color.g * 0.032,
+          b: color.b * 0.032
+        };
+      }
+      
+      // Para otros colores, crear variaciones del color principal
       const colors = [
-        { r: 57 / 255, g: 203 / 255, b: 227 / 255 },   // Cyan principal
-        { r: 100 / 255, g: 220 / 255, b: 235 / 255 },  // Cyan claro
-        { r: 30 / 255, g: 150 / 255, b: 180 / 255 },   // Cyan oscuro
-        { r: 0.5, g: 0.5, b: 0.6 },                     // Gris azulado
-        { r: 0.3, g: 0.3, b: 0.4 },                     // Gris oscuro azulado
+        { r: baseColor.r * 1.0, g: baseColor.g * 1.0, b: baseColor.b * 1.0 },      // Color pleno
+        { r: baseColor.r * 0.8, g: baseColor.g * 0.8, b: baseColor.b * 0.8 },      // 80% de intensidad
+        { r: baseColor.r * 0.6, g: baseColor.g * 0.6, b: baseColor.b * 0.6 },      // 60% de intensidad
+        { r: baseColor.r * 0.4, g: baseColor.g * 0.4, b: baseColor.b * 0.4 },      // 40% de intensidad
       ];
       
       const color = colors[Math.floor(Math.random() * colors.length)];
@@ -1049,8 +1068,7 @@ function SplashCursor({
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleTouchEnd);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [BACK_COLOR]);
 
   return (
     <div
