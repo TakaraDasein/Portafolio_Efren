@@ -1,6 +1,7 @@
 ﻿"use client"
 
 import { motion } from "framer-motion"
+import { useState, useRef } from "react"
 import ProjectsShowcase from "./projects-showcase"
 import NeuralBackground from "./neural-background"
 import { Code2, BrainCircuit, Zap, Database, GitBranch, TrendingUp } from "lucide-react"
@@ -129,6 +130,23 @@ const pipeline = [
 ]
 
 export default function MachineLearningContent() {
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+  const iconRef = useRef<HTMLDivElement>(null)
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!iconRef.current) return
+    const rect = iconRef.current.getBoundingClientRect()
+    const centerX = rect.left + rect.width / 2
+    const centerY = rect.top + rect.height / 2
+    const deltaX = (e.clientX - centerX) / 20
+    const deltaY = (e.clientY - centerY) / 20
+    setMousePosition({ x: deltaX, y: deltaY })
+  }
+
+  const handleMouseLeave = () => {
+    setMousePosition({ x: 0, y: 0 })
+  }
+
   return (
     <main className="min-h-screen bg-background">
       {/* Hero Section */}
@@ -143,15 +161,31 @@ export default function MachineLearningContent() {
           className="relative z-10 text-center px-8"
         >
           <motion.div
+            ref={iconRef}
             initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.2, duration: 0.6 }}
-            className="inline-block mb-6"
+            animate={{ 
+              scale: 1, 
+              opacity: 1,
+              x: mousePosition.x,
+              y: mousePosition.y
+            }}
+            transition={{ 
+              scale: { delay: 0.2, duration: 0.6 },
+              opacity: { delay: 0.2, duration: 0.6 },
+              x: { type: "spring", stiffness: 150, damping: 15 },
+              y: { type: "spring", stiffness: 150, damping: 15 }
+            }}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+            className="inline-block mb-8 cursor-pointer"
           >
-            <BrainCircuit className="w-16 h-16 md:w-20 md:h-20 text-[#ef4444]" strokeWidth={1.5} />
+            <img 
+              src="/ilustraciones/machine-learning.png" 
+              alt="Machine Learning"
+              className="w-20 h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 object-contain"
+            />
           </motion.div>
 
-          <p className="font-mono text-xs tracking-[0.3em] text-muted-foreground mb-4">02 • INTELIGENCIA ARTIFICIAL</p>
           <h1 className="font-sans text-5xl md:text-7xl font-light tracking-tight mb-6">
             Machine <span className="italic text-[#ef4444]">Learning</span>
           </h1>

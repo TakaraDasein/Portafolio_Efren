@@ -1,8 +1,9 @@
 ﻿"use client"
 
 import { motion } from "framer-motion"
-import { useState } from "react"
+import { useState, useRef } from "react"
 import ProjectsShowcase from "./projects-showcase"
+import MatrixBackground from "./matrix-background"
 
 const tableauProjects = [
   {
@@ -97,12 +98,29 @@ const powerbiProjects = [
 
 export default function AnalisisDatosContent() {
   const [visualizationType, setVisualizationType] = useState<'tableau' | 'powerbi'>('tableau')
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+  const iconRef = useRef<HTMLDivElement>(null)
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!iconRef.current) return
+    const rect = iconRef.current.getBoundingClientRect()
+    const centerX = rect.left + rect.width / 2
+    const centerY = rect.top + rect.height / 2
+    const deltaX = (e.clientX - centerX) / 20
+    const deltaY = (e.clientY - centerY) / 20
+    setMousePosition({ x: deltaX, y: deltaY })
+  }
+
+  const handleMouseLeave = () => {
+    setMousePosition({ x: 0, y: 0 })
+  }
   
   const projects = visualizationType === 'tableau' ? tableauProjects : powerbiProjects
   return (
     <main className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="relative h-[60vh] flex items-center justify-center border-b border-white/10">
+      <section className="relative h-[60vh] flex items-center justify-center border-b border-white/10 overflow-hidden">
+        <MatrixBackground />
         <div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black opacity-50" />
         
         <motion.div
@@ -112,17 +130,31 @@ export default function AnalisisDatosContent() {
           className="relative z-10 text-center px-8"
         >
           <motion.div
+            ref={iconRef}
             initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.2, duration: 0.6 }}
-            className="inline-block mb-6"
+            animate={{ 
+              scale: 1, 
+              opacity: 1,
+              x: mousePosition.x,
+              y: mousePosition.y
+            }}
+            transition={{ 
+              scale: { delay: 0.2, duration: 0.6 },
+              opacity: { delay: 0.2, duration: 0.6 },
+              x: { type: "spring", stiffness: 150, damping: 15 },
+              y: { type: "spring", stiffness: 150, damping: 15 }
+            }}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+            className="inline-block mb-8 cursor-pointer"
           >
-            <svg className="w-16 h-16 md:w-20 md:h-20 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
+            <img 
+              src="/ilustraciones/data-analisis.png" 
+              alt="Análisis de Datos"
+              className="w-20 h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 object-contain"
+            />
           </motion.div>
 
-          <p className="font-mono text-xs tracking-[0.3em] text-muted-foreground mb-4">01  ESPECIALIZACIÓN</p>
           <h1 className="font-sans text-5xl md:text-7xl font-light tracking-tight mb-6">
             Análisis de <span className="italic">Datos</span>
           </h1>

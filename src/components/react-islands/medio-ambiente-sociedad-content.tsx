@@ -1,6 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
+import { useState, useRef } from "react"
 import ProjectsShowcase from "./projects-showcase"
 import { Leaf, Users, Globe, ShieldAlert, Heart, Landmark } from "lucide-react"
 
@@ -13,6 +14,16 @@ const environmentProjects = [
     tags: ["Bosques", "Cambio Climático", "Visualización", "Global"],
     featured: true,
     thumbnail: "/proyectos/9.densidad-fores.png",
+    type: "web" as const
+  },
+  {
+    id: "sec-1",
+    title: "Sistema de Seguimiento Contractual - SEC",
+    description: "Plataforma de gestión y seguimiento contractual para la Secretaría de Educación de Guadalajara de Buga. Sistema integral para el monitoreo, administración y control de contratos educativos del territorio.",
+    embedUrl: "https://sistema-seguimiento-contractual-sec.vercel.app/",
+    tags: ["Educación", "Territorial", "Gestión Pública", "Contratos"],
+    featured: false,
+    thumbnail: "/alcaldia-buga.png",
     type: "web" as const
   }
 ]
@@ -72,6 +83,23 @@ const methodology = [
 ]
 
 export default function MedioAmbienteSociedadContent() {
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+  const iconRef = useRef<HTMLDivElement>(null)
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!iconRef.current) return
+    const rect = iconRef.current.getBoundingClientRect()
+    const centerX = rect.left + rect.width / 2
+    const centerY = rect.top + rect.height / 2
+    const deltaX = (e.clientX - centerX) / 20
+    const deltaY = (e.clientY - centerY) / 20
+    setMousePosition({ x: deltaX, y: deltaY })
+  }
+
+  const handleMouseLeave = () => {
+    setMousePosition({ x: 0, y: 0 })
+  }
+
   return (
     <main className="min-h-screen bg-background">
       {/* Hero Section */}
@@ -85,15 +113,31 @@ export default function MedioAmbienteSociedadContent() {
           className="relative z-10 text-center px-8"
         >
           <motion.div
+            ref={iconRef}
             initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.2, duration: 0.6 }}
-            className="inline-block mb-6"
+            animate={{ 
+              scale: 1, 
+              opacity: 1,
+              x: mousePosition.x,
+              y: mousePosition.y
+            }}
+            transition={{ 
+              scale: { delay: 0.2, duration: 0.6 },
+              opacity: { delay: 0.2, duration: 0.6 },
+              x: { type: "spring", stiffness: 150, damping: 15 },
+              y: { type: "spring", stiffness: 150, damping: 15 }
+            }}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+            className="inline-block mb-8 cursor-pointer"
           >
-            <Leaf className="w-16 h-16 md:w-20 md:h-20 text-[#10b981]" strokeWidth={1.5} />
+            <img 
+              src="/ilustraciones/cultura-sociedad.png" 
+              alt="Medio Ambiente y Sociedad"
+              className="w-20 h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 object-contain"
+            />
           </motion.div>
 
-          <p className="font-mono text-xs tracking-[0.3em] text-muted-foreground mb-4">03 • IMPACTO TERRITORIAL</p>
           <h1 className="font-sans text-5xl md:text-7xl font-light tracking-tight mb-6">
             Medio Ambiente y <span className="italic text-[#10b981]">Sociedad</span>
           </h1>

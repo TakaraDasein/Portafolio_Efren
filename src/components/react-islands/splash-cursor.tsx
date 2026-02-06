@@ -78,6 +78,7 @@ function SplashCursor({
       const isWebGL2 = !!gl;
       if (!isWebGL2) gl = canvas.getContext('webgl', params) || canvas.getContext('experimental-webgl', params);
 
+      
       let halfFloat;
       let supportLinearFiltering;
       if (isWebGL2) {
