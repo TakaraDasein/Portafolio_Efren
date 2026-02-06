@@ -3,6 +3,7 @@
 import { motion } from "framer-motion"
 import { useState, useRef } from "react"
 import ProjectsShowcase from "./projects-showcase"
+import EcosystemBackground from "./ecosystem-background"
 import { Leaf, Users, Globe, ShieldAlert, Heart, Landmark } from "lucide-react"
 
 const environmentProjects = [
@@ -103,7 +104,8 @@ export default function MedioAmbienteSociedadContent() {
   return (
     <main className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="relative h-[60vh] flex items-center justify-center border-b border-white/10">
+      <section className="relative h-[60vh] flex items-center justify-center border-b border-white/10 overflow-hidden">
+        <EcosystemBackground />
         <div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black opacity-50" />
         
         <motion.div
