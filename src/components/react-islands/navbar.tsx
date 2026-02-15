@@ -84,7 +84,7 @@ export default function Navbar() {
             >
               <a
                 href="/dashboard"
-                className="group p-2 border border-white/20 hover:border-cyan-500 transition-all duration-300"
+                className="group p-2 transition-all duration-300"
                 data-cursor-hover
                 title="Dashboard"
               >
