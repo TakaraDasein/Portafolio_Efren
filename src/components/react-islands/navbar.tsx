@@ -7,10 +7,13 @@ const navLinks = [
   { label: "Sobre M�", href: "#about" },
   { label: "Contacto", href: "#contact" },
 ]
-
+import { useRef } from "react"
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+  const [dashboardOpacity, setDashboardOpacity] = useState(0)
+  const dashboardButtonRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -18,6 +21,27 @@ export default function Navbar() {
     }
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePosition({ x: e.clientX, y: e.clientY })
+      
+      if (dashboardButtonRef.current) {
+        const rect = dashboardButtonRef.current.getBoundingClientRect()
+        const distance = Math.sqrt(
+          Math.pow(e.clientX - (rect.left + rect.width / 2), 2) +
+          Math.pow(e.clientY - (rect.top + rect.height / 2), 2)
+        )
+        
+        const maxDistance = 200
+        const opacity = Math.max(0, 1 - (distance / maxDistance))
+        setDashboardOpacity(opacity)
+      }
+    }
+    
+    window.addEventListener('mousemove', handleMouseMove)
+    return () => window.removeEventListener('mousemove', handleMouseMove)
   }, [])
 
   const scrollToSection = (href: string) => {
@@ -48,18 +72,27 @@ export default function Navbar() {
             }}
             className="group flex items-center gap-2"
           >
-            <span className="font-mono text-xs tracking-widest text-muted-foreground">PORTAFOLIO</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-accent group-hover:scale-150 transition-transform duration-300" />
           </a>
 
           {/* Desktop Navigation */}
 
-          <div className="hidden md:flex items-center gap-3">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-accent" />
-            </span>
-            <span className="font-mono text-xs tracking-wider text-muted-foreground">DISPONIBLE PARA PROYECTOS</span>
+          <div className="hidden md:flex items-center gap-6">
+            <div
+              ref={dashboardButtonRef}
+              style={{ opacity: dashboardOpacity }}
+              className="transition-opacity duration-300"
+            >
+              <a
+                href="/dashboard"
+                className="group p-2 border border-white/20 hover:border-cyan-500 transition-all duration-300"
+                data-cursor-hover
+                title="Dashboard"
+              >
+                <svg className="w-5 h-5 text-muted-foreground group-hover:text-cyan-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </a>
+            </div>
           </div>
 
           {/* Mobile Menu Button */}
@@ -109,20 +142,7 @@ export default function Navbar() {
                   {link.label}
                 </motion.button>
               ))}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.4 }}
-                className="flex items-center gap-3 mt-8"
-              >
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-accent" />
-                </span>
-                <span className="font-mono text-xs tracking-wider text-muted-foreground">
-                  DISPONIBLE PARA PROYECTOS
-                </span>
-              </motion.div>
+
             </nav>
           </motion.div>
         )}

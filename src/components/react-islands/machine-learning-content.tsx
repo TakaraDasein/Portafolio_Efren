@@ -13,7 +13,7 @@ const mlProjects = [
     description: "Modelo de clasificación usando Random Forest y XGBoost para predecir riesgo de deserción universitaria, integrando variables académicas, socioeconómicas y comportamentales con 89% de precisión",
     tags: ["Classification", "Random Forest", "Python", "Scikit-learn"],
     featured: true,
-    thumbnail: "/proyectos/ml-desercion.png",
+    thumbnail: "/sound-wave-visualization-dark-theme.jpg",
     type: "jupyter" as const,
     externalLink: "#"
   },
@@ -22,7 +22,7 @@ const mlProjects = [
     title: "Sistema de Recomendación NLP",
     description: "Motor de recomendaciones basado en procesamiento de lenguaje natural y análisis de sentimientos para personalización de contenido educativo usando embeddings y transformers",
     tags: ["NLP", "Transformers", "Sentiment Analysis", "TensorFlow"],
-    thumbnail: "/proyectos/ml-nlp.png",
+    thumbnail: "/sound-wave-visualization-dark-theme.jpg",
     type: "github" as const,
     externalLink: "#"
   },
@@ -32,7 +32,7 @@ const mlProjects = [
     description: "Segmentación automática de usuarios mediante K-Means y DBSCAN para identificar patrones de comportamiento y optimizar estrategias de marketing dirigido",
     tags: ["Clustering", "K-Means", "Unsupervised Learning", "Python"],
     featured: true,
-    thumbnail: "/proyectos/ml-clustering.png",
+    thumbnail: "/sound-wave-visualization-dark-theme.jpg",
     type: "jupyter" as const,
     externalLink: "#"
   },
@@ -41,7 +41,7 @@ const mlProjects = [
     title: "Detección de Anomalías en Series Temporales",
     description: "Implementación de autoencoders y LSTM para identificación de patrones anómalos en datos de sensores IoT con aplicación en mantenimiento predictivo",
     tags: ["Deep Learning", "LSTM", "Anomaly Detection", "Keras"],
-    thumbnail: "/proyectos/ml-anomalias.png",
+    thumbnail: "/sound-wave-visualization-dark-theme.jpg",
     type: "jupyter" as const,
     externalLink: "#"
   },
@@ -50,7 +50,7 @@ const mlProjects = [
     title: "Clasificación de Imágenes CNN",
     description: "Red neuronal convolucional para clasificación multiclase de imágenes médicas usando transfer learning con ResNet50, alcanzando 92% de accuracy en validación",
     tags: ["CNN", "Transfer Learning", "Computer Vision", "PyTorch"],
-    thumbnail: "/proyectos/ml-cnn.png",
+    thumbnail: "/sound-wave-visualization-dark-theme.jpg",
     type: "github" as const,
     externalLink: "#"
   },
@@ -60,7 +60,7 @@ const mlProjects = [
     description: "Asistente virtual desarrollado con LangChain y modelos de lenguaje para atención al cliente automatizada, integrando RAG para consultas específicas del dominio",
     tags: ["LLMs", "LangChain", "NLP", "RAG"],
     featured: true,
-    thumbnail: "/proyectos/ml-chatbot.png",
+    thumbnail: "/sound-wave-visualization-dark-theme.jpg",
     type: "demo" as const,
     externalLink: "#"
   },
