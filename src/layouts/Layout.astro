@@ -5,10 +5,13 @@ import '@fontsource/playfair-display/400-italic.css'
 import '@fontsource/playfair-display/700.css'
 import '@fontsource/geist-mono/400.css'
 import '@fontsource/geist-mono/500.css'
+import '@fontsource/orbitron/600.css'
+import '@fontsource/orbitron/700.css'
 import '../styles/global.css'
 import { ViewTransitions } from 'astro:transitions'
 import ParticlesBackground from '../components/react-islands/particles-background.tsx'
 import SplashCursor from '../components/react-islands/splash-cursor.tsx'
+import ClickSound from '../components/react-islands/click-sound.tsx'
 
 interface Props {
   title?: string
@@ -47,6 +50,7 @@ if (pathname.includes('machine-learning')) {
     <ViewTransitions />
   </head>
   <body class="font-sans antialiased overflow-x-hidden">
+    <ClickSound client:idle />
     <SplashCursor client:idle BACK_COLOR={backColor} />
     {showParticles && <ParticlesBackground client:idle density={0.00008} />}
     <div class="noise-overlay"></div>
@@ -62,5 +66,6 @@ if (pathname.includes('machine-learning')) {
   :root {
     --font-playfair: 'Playfair Display', 'Georgia', serif;
     --font-geist-mono: 'Geist Mono', 'Geist Mono Fallback', monospace;
+    --font-tech: 'Orbitron', 'Geist Mono', monospace;
   }
 </style>

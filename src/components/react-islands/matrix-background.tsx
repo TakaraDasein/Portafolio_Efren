@@ -2,7 +2,11 @@
 
 import { useEffect, useRef } from 'react'
 
-export default function MatrixBackground() {
+type MatrixBackgroundProps = {
+  reverse?: boolean
+}
+
+export default function MatrixBackground({ reverse = false }: MatrixBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
@@ -32,7 +36,9 @@ export default function MatrixBackground() {
     // Array de gotas - una por columna
     const drops: number[] = []
     for (let i = 0; i < columns; i++) {
-      drops[i] = Math.random() * -100
+      drops[i] = reverse
+        ? Math.random() * ((canvas.height / fontSize) + 100)
+        : Math.random() * -100
     }
 
     // Función de dibujo
@@ -58,12 +64,17 @@ export default function MatrixBackground() {
 
         // Resetear gota al tope cuando llega al fondo
         // También agregar aleatoriedad para que no todas caigan al mismo ritmo
-        if (y > canvas.height && Math.random() > 0.975) {
-          drops[i] = 0
+        if (reverse) {
+          if (y < 0 && Math.random() > 0.975) {
+            drops[i] = canvas.height / fontSize
+          }
+          drops[i]--
+        } else {
+          if (y > canvas.height && Math.random() > 0.975) {
+            drops[i] = 0
+          }
+          drops[i]++
         }
-
-        // Incrementar posición Y
-        drops[i]++
       }
     }
 

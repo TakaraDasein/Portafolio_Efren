@@ -2,6 +2,8 @@
 import Layout from '../layouts/Layout.astro'
 import Navbar from '../components/react-islands/navbar.tsx'
 import Hero from '../components/react-islands/hero.tsx'
+import HomeMatrixSection from '../components/react-islands/home-matrix-section.tsx'
+import HomeCertExpTitle from '../components/react-islands/home-cert-exp-title.tsx'
 import About from '../components/react-islands/about.tsx'
 import DataLifecycle from '../components/react-islands/data-lifecycle.tsx'
 import TechMarquee from '../components/react-islands/tech-marquee.tsx'
@@ -15,6 +17,8 @@ import SectionBlend from '../components/react-islands/section-blend.tsx'
     <Navbar client:load />
     <main>
       <Hero client:load />
+      <HomeMatrixSection client:load />
+      <HomeCertExpTitle client:load />
       <SectionBlend client:load />
       <About client:visible />
       <DataLifecycle client:visible />
