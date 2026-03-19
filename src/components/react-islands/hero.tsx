@@ -3,6 +3,7 @@
 import { useRef, useState, useEffect } from "react"
 import { motion, useScroll, useTransform } from "framer-motion"
 import { SentientSphere } from "./sentient-sphere"
+import { DataParticles } from "./data-particles"
 
 export default function Hero() {
   const containerRef = useRef<HTMLElement>(null)
@@ -97,6 +98,9 @@ export default function Hero() {
 
   return (
     <section ref={containerRef} className="relative h-screen w-full overflow-hidden bg-[#050505]">
+      {/* Partículas de datos sutiles */}
+      <DataParticles />
+      
       {/* 3D Sphere - Background en móvil, Foreground en desktop */}
       <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] sm:w-[400px] sm:h-[400px] md:w-[450px] md:h-[450px] lg:w-[500px] lg:h-[500px] xl:w-[600px] xl:h-[600px] 2xl:w-[700px] 2xl:h-[700px] z-0 md:z-50 opacity-70 md:opacity-90 lg:opacity-95 xl:opacity-100 pointer-events-auto overflow-visible">
         <SentientSphere />
@@ -273,4 +277,9 @@ export default function Hero() {
     </section>
   )
 }
+
+
+
+
+
 
