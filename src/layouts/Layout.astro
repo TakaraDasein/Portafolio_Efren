@@ -1,0 +1,71 @@
+﻿---
+// Importar solo pesos específicos de fuentes para optimización
+import '@fontsource/playfair-display/400.css'
+import '@fontsource/playfair-display/400-italic.css'
+import '@fontsource/playfair-display/700.css'
+import '@fontsource/geist-mono/400.css'
+import '@fontsource/geist-mono/500.css'
+import '@fontsource/orbitron/600.css'
+import '@fontsource/orbitron/700.css'
+import '../styles/global.css'
+import { ViewTransitions } from 'astro:transitions'
+import ParticlesBackground from '../components/react-islands/particles-background.tsx'
+import SplashCursor from '../components/react-islands/splash-cursor.tsx'
+import ClickSound from '../components/react-islands/click-sound.tsx'
+
+interface Props {
+  title?: string
+  description?: string
+}
+
+const { 
+  title = 'AI-Native Product Builder | Portfolio',
+  description = 'System Architect & Interface Designer crafting intelligent digital experiences'
+} = Astro.props
+
+const pathname = Astro.url.pathname;
+let backColor = { r: 0, g: 0, b: 1 }; // blue
+const showParticles = !pathname.includes('machine-learning'); // No mostrar partículas en ML
+if (pathname.includes('machine-learning')) {
+  backColor = { r: 1, g: 0, b: 0 }; // red
+} else if (pathname.includes('medio-ambiente-sociedad')) {
+  backColor = { r: 0, g: 1, b: 0 }; // green
+}
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content={description} />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    
+    <!-- Resource hints para mejor performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+    <link rel="dns-prefetch" href="https://vercel.com" />
+    
+    <title>{title}</title>
+    <ViewTransitions />
+  </head>
+  <body class="font-sans antialiased overflow-x-hidden">
+    <ClickSound client:idle />
+    <SplashCursor client:idle BACK_COLOR={backColor} />
+    {showParticles && <ParticlesBackground client:idle density={0.00008} />}
+    <div class="noise-overlay"></div>
+    <slot />
+    <script>
+      import { inject } from '@vercel/analytics'
+      inject()
+    </script>
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    --font-playfair: 'Playfair Display', 'Georgia', serif;
+    --font-geist-mono: 'Geist Mono', 'Geist Mono Fallback', monospace;
+    --font-tech: 'Orbitron', 'Geist Mono', monospace;
+  }
+</style>
