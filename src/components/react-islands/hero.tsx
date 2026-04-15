@@ -1,15 +1,16 @@
 "use client"
 
 import { useRef, useState, useEffect } from "react"
-import { motion, useScroll, useTransform } from "framer-motion"
-import { Github, Linkedin } from "lucide-react"
+import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion"
 import { SentientSphere } from "./sentient-sphere"
 import { DataParticles } from "./data-particles"
+import SocialLinks from "./social-links"
 
 export default function Hero() {
   const containerRef = useRef<HTMLElement>(null)
   const [hoveredButton, setHoveredButton] = useState<string | null>(null)
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0)
+  const [roleIndex, setRoleIndex] = useState(0)
   const [displayedText, setDisplayedText] = useState("")
   const [isTyping, setIsTyping] = useState(true)
   
@@ -23,12 +24,18 @@ export default function Hero() {
 
   // Frases rotativas con palabras clave resaltadas
   const phrases = [
-    { text: "La pregunta correcta ", highlight: "transforma", text2: " los datos" },
-    { text: "Destilar la complejidad para hallar la ", highlight: "ruta de acción" },
-    { text: "La ética como ", highlight: "código de depuración" },
-    { text: "De la incertidumbre social al ", highlight: "bienestar común" },
-    { text: "Una correlación es una pista, no ", highlight: "una causa" },
-    { text: "Cada punto de datos es una ", highlight: "historia humana" },
+    { text: "Integración y depuración de ", highlight: "datos sociales multisectoriales" },
+    { text: "Diseño de ", highlight: "indicadores institucionales", text2: " y trazabilidad operativa" },
+    { text: "Modelado computacional del ", highlight: "comportamiento político" },
+    { text: "Análisis espacial multivariable con ", highlight: "SIG" },
+    { text: "Monitoreo de derechos humanos con ", highlight: "alerta temprana" },
+    { text: "Evaluación de impacto y ", highlight: "efectividad de políticas públicas" },
+    { text: "Inteligencia artificial aplicada a ", highlight: "problemas públicos complejos" },
+    { text: "Aprendizaje automático para ", highlight: "predicción y clasificación de riesgos" },
+  ]
+
+  const rolePhrases = [
+    "Politólogo & Científico de Datos",
   ]
 
   // Efecto de typing
@@ -57,6 +64,14 @@ export default function Hero() {
     
     return () => clearInterval(typingInterval)
   }, [currentPhraseIndex])
+
+  useEffect(() => {
+    const roleInterval = setInterval(() => {
+      setRoleIndex((prev) => (prev + 1) % rolePhrases.length)
+    }, 2200)
+
+    return () => clearInterval(roleInterval)
+  }, [rolePhrases.length])
 
   const navigationButtons = [
     {
@@ -145,6 +160,20 @@ export default function Hero() {
               <h1 className="font-sans text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl 2xl:text-5xl font-light tracking-tight">
                 Alvaro Efren <span className="italic">B.S.</span>
               </h1>
+              <div className="mt-1 min-h-[24px] sm:min-h-[28px] md:min-h-[32px] lg:min-h-[36px]">
+                <AnimatePresence mode="wait">
+                  <motion.p
+                    key={roleIndex}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.35 }}
+                    className="font-serif text-xs sm:text-sm md:text-base lg:text-lg italic tracking-wide text-white/80"
+                  >
+                    {rolePhrases[roleIndex]}
+                  </motion.p>
+                </AnimatePresence>
+              </div>
               <div className="w-[220px] sm:w-[240px] md:w-[280px] lg:w-[320px] xl:w-[360px] mx-auto md:mx-0 h-[60px] sm:h-[64px] md:h-[68px] lg:h-[72px] xl:h-[76px] flex items-start mt-2 sm:mt-2 md:mt-2 lg:mt-3">
                 <p className="font-mono text-[10px] sm:text-xs md:text-xs lg:text-sm xl:text-base text-muted-foreground tracking-wide leading-relaxed">
                   {displayedText.split('').map((char, index) => {
@@ -163,28 +192,7 @@ export default function Hero() {
                   {isTyping && <span className="animate-pulse text-cyan-500">|</span>}
                 </p>
               </div>
-              <div className="mt-3 sm:mt-4 flex items-center justify-center md:justify-start gap-3">
-                <a
-                  href="https://github.com/TakaraDasein"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="GitHub"
-                  data-cursor-hover
-                  className="p-1.5 text-muted-foreground/75 hover:text-cyan-500 transition-colors duration-300"
-                >
-                  <Github className="w-4 h-4" />
-                </a>
-                <a
-                  href="https://www.linkedin.com/in/alvaro-efren-bola%C3%B1os-scalante-a42520219/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="LinkedIn"
-                  data-cursor-hover
-                  className="p-1.5 text-muted-foreground/75 hover:text-cyan-500 transition-colors duration-300"
-                >
-                  <Linkedin className="w-4 h-4" />
-                </a>
-              </div>
+              <SocialLinks accentColor="#39cbe3" className="mt-3 sm:mt-4 justify-center md:justify-start" />
             </motion.div>
           </div>
 
@@ -300,8 +308,3 @@ export default function Hero() {
     </section>
   )
 }
-
-
-
-
-

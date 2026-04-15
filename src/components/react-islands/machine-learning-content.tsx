@@ -4,7 +4,8 @@ import { motion } from "framer-motion"
 import { useState, useRef } from "react"
 import ProjectsShowcase from "./projects-showcase"
 import NeuralBackground from "./neural-background"
-import { Code2, BrainCircuit, Zap, Database, GitBranch, TrendingUp, Github, Linkedin } from "lucide-react"
+import { Code2, BrainCircuit, Zap, Database, GitBranch, TrendingUp } from "lucide-react"
+import SocialLinks from "./social-links"
 
 const mlProjects = [
   {
@@ -192,26 +193,7 @@ export default function MachineLearningContent() {
           <p className="font-mono text-sm md:text-base text-muted-foreground max-w-2xl mx-auto">
             Desarrollando modelos inteligentes que aprenden, predicen y optimizan decisiones empresariales complejas
           </p>
-          <div className="mt-4 flex items-center justify-center gap-3">
-            <a
-              href="https://github.com/TakaraDasein"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="GitHub"
-              className="p-1.5 text-muted-foreground/75 hover:text-[#ef4444] transition-colors duration-300"
-            >
-              <Github className="w-4 h-4" />
-            </a>
-            <a
-              href="https://www.linkedin.com/in/alvaro-efren-bola%C3%B1os-scalante-a42520219/"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="LinkedIn"
-              className="p-1.5 text-muted-foreground/75 hover:text-[#ef4444] transition-colors duration-300"
-            >
-              <Linkedin className="w-4 h-4" />
-            </a>
-          </div>
+          <SocialLinks accentColor="#ef4444" className="mt-4 justify-center" />
         </motion.div>
 
         <a href="/"
@@ -405,4 +387,3 @@ export default function MachineLearningContent() {
     </main>
   )
 }
-

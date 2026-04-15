@@ -2,9 +2,9 @@
 
 import { motion } from "framer-motion"
 import { useState, useRef } from "react"
-import { Github, Linkedin } from "lucide-react"
 import ProjectsShowcase from "./projects-showcase"
 import MatrixBackground from "./matrix-background"
+import SocialLinks from "./social-links"
 
 const tableauProjects = [
   {
@@ -97,8 +97,47 @@ const powerbiProjects = [
   }
 ]
 
+const openSourceProjects = [
+  {
+    id: "os-1",
+    title: "Densidad Forestal Global 2000-2020",
+    description: "Visualización interactiva que muestra la evolución de la densidad forestal global entre 2000 y 2020, permitiendo comparar regiones y analizar tendencias ambientales.",
+    embedUrl: "https://densidad-forestal-global-2000-2020.vercel.app/",
+    tags: ["Bosques", "Cambio Climático", "Visualización", "Global"],
+    thumbnail: "/proyectos/9.densidad-fores.png",
+    type: "web" as const
+  },
+  {
+    id: "os-2",
+    title: "Sistema de Seguimiento Contractual - SEC",
+    description: "Plataforma de gestión y seguimiento contractual para la Secretaría de Educación de Guadalajara de Buga, enfocada en monitoreo, administración y control territorial.",
+    embedUrl: "https://sistema-seguimiento-contractual-sec.vercel.app/",
+    tags: ["Educación", "Territorial", "Gestión Pública", "Contratos"],
+    thumbnail: "/alcaldia-buga.png",
+    type: "web" as const
+  },
+  {
+    id: "os-3",
+    title: "Línea de Tiempo de Presidentes de Colombia",
+    description: "Aplicación interactiva para explorar de forma cronológica los periodos presidenciales en Colombia y facilitar análisis histórico-político.",
+    embedUrl: "https://1-colombian-presidents-timeline-end.vercel.app/",
+    tags: ["Historia", "Política", "Cronología", "Colombia"],
+    thumbnail: "/proyectos/10.linea-presidents.jpeg",
+    type: "web" as const
+  },
+  {
+    id: "os-4",
+    title: "Índice de Riesgo Climático en Colombia",
+    description: "Plataforma interactiva para explorar el índice de riesgo climático en Colombia, identificar vulnerabilidades territoriales y priorizar acciones de adaptación.",
+    embedUrl: "https://indice-riesgo-climatico-colombia.vercel.app/",
+    tags: ["Clima", "Riesgo", "Territorial", "Colombia"],
+    thumbnail: "/proyectos/11.riesgo-climatico.jpeg",
+    type: "web" as const
+  }
+]
+
 export default function AnalisisDatosContent() {
-  const [visualizationType, setVisualizationType] = useState<'tableau' | 'powerbi'>('tableau')
+  const [visualizationType, setVisualizationType] = useState<'tableau' | 'powerbi' | 'opensource'>('tableau')
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const iconRef = useRef<HTMLDivElement>(null)
 
@@ -116,7 +155,12 @@ export default function AnalisisDatosContent() {
     setMousePosition({ x: 0, y: 0 })
   }
   
-  const projects = visualizationType === 'tableau' ? tableauProjects : powerbiProjects
+  const projects =
+    visualizationType === 'tableau'
+      ? tableauProjects
+      : visualizationType === 'powerbi'
+        ? powerbiProjects
+        : openSourceProjects
   return (
     <main className="min-h-screen bg-background">
       {/* Hero Section */}
@@ -162,26 +206,7 @@ export default function AnalisisDatosContent() {
           <p className="font-mono text-sm md:text-base text-muted-foreground max-w-2xl mx-auto">
             Transformando datos complejos en insights accionables para la toma de decisiones estratégicas
           </p>
-          <div className="mt-4 flex items-center justify-center gap-3">
-            <a
-              href="https://github.com/TakaraDasein"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="GitHub"
-              className="p-1.5 text-muted-foreground/75 hover:text-cyan-500 transition-colors duration-300"
-            >
-              <Github className="w-4 h-4" />
-            </a>
-            <a
-              href="https://www.linkedin.com/in/alvaro-efren-bola%C3%B1os-scalante-a42520219/"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="LinkedIn"
-              className="p-1.5 text-muted-foreground/75 hover:text-cyan-500 transition-colors duration-300"
-            >
-              <Linkedin className="w-4 h-4" />
-            </a>
-          </div>
+          <SocialLinks accentColor="#39cbe3" className="mt-4 justify-center" />
         </motion.div>
 
         <a
@@ -204,7 +229,7 @@ export default function AnalisisDatosContent() {
           transition={{ duration: 0.8 }}
         >
           <p className="font-mono text-xs tracking-[0.3em] text-muted-foreground mb-4">
-            04  {visualizationType === 'tableau' ? 'TABLEAU DASHBOARDS' : 'POWER BI DASHBOARDS'}
+            04  {visualizationType === 'tableau' ? 'TABLEAU DASHBOARDS' : visualizationType === 'powerbi' ? 'POWER BI DASHBOARDS' : 'OPEN SOURCE APPS'}
           </p>
           <h2 className="font-sans text-3xl md:text-5xl font-light italic mb-4">
             Visualizaciones <span className="text-cyan-500">Interactivas</span>
@@ -212,7 +237,9 @@ export default function AnalisisDatosContent() {
           <p className="font-mono text-sm text-muted-foreground max-w-3xl mb-8">
             {visualizationType === 'tableau' 
               ? 'Explora dashboards interactivos creados con Tableau, diseñados para transformar datos complejos en historias visuales comprensibles y accionables.'
-              : 'Descubre análisis avanzados desarrollados con Power BI, combinando visualizaciones dinámicas con inteligencia empresarial para mejores decisiones.'
+              : visualizationType === 'powerbi'
+                ? 'Descubre análisis avanzados desarrollados con Power BI, combinando visualizaciones dinámicas con inteligencia empresarial para mejores decisiones.'
+                : 'Conoce aplicaciones y visualizaciones desarrolladas con tecnologías open source, enfocadas en análisis territorial, histórico y climático.'
             }
           </p>
           
@@ -238,6 +265,17 @@ export default function AnalisisDatosContent() {
               }`}
             >
               POWER BI
+            </button>
+            <div className="w-px h-6 bg-white/10" />
+            <button
+              onClick={() => setVisualizationType('opensource')}
+              className={`font-mono text-xs tracking-wider px-4 py-2 border transition-all ${
+                visualizationType === 'opensource'
+                  ? 'border-cyan-500 bg-cyan-500/10 text-cyan-500'
+                  : 'border-white/20 text-muted-foreground hover:border-cyan-500/50'
+              }`}
+            >
+              OPEN SOURCE
             </button>
           </div>
         </motion.div>

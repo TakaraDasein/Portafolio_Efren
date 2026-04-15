@@ -4,7 +4,8 @@ import { motion } from "framer-motion"
 import { useState, useRef } from "react"
 import ProjectsShowcase from "./projects-showcase"
 import ConcentricWavesBackground from "./concentric-waves-background"
-import { Leaf, Users, Globe, ShieldAlert, Heart, Landmark, Github, Linkedin } from "lucide-react"
+import { Leaf, Users, Globe, ShieldAlert, Heart, Landmark } from "lucide-react"
+import SocialLinks from "./social-links"
 
 const environmentProjects = [
   {
@@ -46,6 +47,36 @@ const environmentProjects = [
     featured: false,
     thumbnail: "/proyectos/11.riesgo-climatico.jpeg",
     type: "web" as const
+  },
+  {
+    id: "fresota-cauca",
+    title: "Análisis de Sostenibilidad Fresota - Cauca",
+    description: "Dashboard socioambiental que evalúa indicadores de sostenibilidad en la región del Cauca, integrando variables ambientales y sociales para la toma de decisiones estratégicas.",
+    embedUrl: "https://public.tableau.com/views/AnlisisdeSostenibilidadFresota-CaucaSocio-ambiental/0_InfoGe?:embed=y&:display_count=yes&:showVizHome=no",
+    tags: ["Sostenibilidad", "Medio Ambiente", "Territorial", "Cauca"],
+    featured: true,
+    thumbnail: "/proyectos/8.fresota.png",
+    type: "tableau" as const
+  },
+  {
+    id: "dashboard-organizaciones-territorial",
+    title: "Dashboard de Organizaciones",
+    description: "Análisis integral de organizaciones sociales y comunitarias, incluyendo distribución geográfica, áreas de acción y capacidades operativas en el territorio.",
+    embedUrl: "https://public.tableau.com/views/DashboarddeOrganizaciones/Dashboard1?:embed=y&:display_count=yes&:showVizHome=no",
+    tags: ["Organizaciones", "Social", "Territorial", "Mapeo"],
+    featured: false,
+    thumbnail: "/proyectos/2.cosurca.png",
+    type: "tableau" as const
+  },
+  {
+    id: "geovisor-multivariado-cauca",
+    title: "Geovisor Multivariado - Riesgo de Reclutamiento Cauca",
+    description: "Análisis multivariado que identifica zonas de riesgo de reclutamiento forzado de niñas, niños y adolescentes en el Cauca, integrando variables sociales, económicas y de conflicto.",
+    embedUrl: "https://public.tableau.com/views/DATALABGeovisormultivariadoEND/Historia?:embed=y&:display_count=yes&:showVizHome=no",
+    tags: ["Protección Infantil", "Multivariado", "Riesgo", "Territorial"],
+    featured: true,
+    thumbnail: "/proyectos/1.geovisor-multivariado.png",
+    type: "tableau" as const
   }
 ]
 
@@ -166,26 +197,7 @@ export default function MedioAmbienteSociedadContent() {
           <p className="font-mono text-sm md:text-base text-muted-foreground max-w-2xl mx-auto">
             Análisis de datos para la sostenibilidad, derechos humanos y construcción de paz territorial
           </p>
-          <div className="mt-4 flex items-center justify-center gap-3">
-            <a
-              href="https://github.com/TakaraDasein"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="GitHub"
-              className="p-1.5 text-muted-foreground/75 hover:text-[#10b981] transition-colors duration-300"
-            >
-              <Github className="w-4 h-4" />
-            </a>
-            <a
-              href="https://www.linkedin.com/in/alvaro-efren-bola%C3%B1os-scalante-a42520219/"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="LinkedIn"
-              className="p-1.5 text-muted-foreground/75 hover:text-[#10b981] transition-colors duration-300"
-            >
-              <Linkedin className="w-4 h-4" />
-            </a>
-          </div>
+          <SocialLinks accentColor="#10b981" className="mt-4 justify-center" />
         </motion.div>
 
         <a href="/"
@@ -221,26 +233,7 @@ export default function MedioAmbienteSociedadContent() {
             "Los datos no son solo números: son <span className="italic text-[#10b981]">territorios</span>, son <span className="italic text-[#10b981]">comunidades</span>, son <span className="italic text-[#10b981]">vidas</span>. 
             Mi trabajo busca que cada visualización contribuya a la construcción de paz, la defensa de derechos y la sostenibilidad territorial."
           </blockquote>
-          <div className="flex items-center justify-center gap-4 mb-8">
-            <a
-              href="https://github.com/TakaraDasein"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="GitHub"
-              className="p-2 text-muted-foreground/80 hover:text-[#10b981] transition-colors duration-300"
-            >
-              <Github className="w-4 h-4" />
-            </a>
-            <a
-              href="https://www.linkedin.com/in/alvaro-efren-bola%C3%B1os-scalante-a42520219/"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="LinkedIn"
-              className="p-2 text-muted-foreground/80 hover:text-[#10b981] transition-colors duration-300"
-            >
-              <Linkedin className="w-4 h-4" />
-            </a>
-          </div>
+          <SocialLinks accentColor="#10b981" className="mb-8 justify-center" paddingClass="p-2" />
           <div className="h-px bg-gradient-to-r from-transparent via-[#10b981] to-transparent" />
         </motion.div>
       </section>

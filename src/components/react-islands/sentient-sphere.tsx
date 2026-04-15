@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useRef, useMemo, useEffect, useState } from "react"
 import { Canvas, useFrame, useThree } from "@react-three/fiber"
@@ -27,6 +27,11 @@ function Sphere() {
     uniform float uTime;
     varying vec2 vUv;
     varying float vDisplacement;
+    varying float vSparkle;
+
+    float random(vec2 st) {
+      return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453123);
+    }
     
     vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
     vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
@@ -85,8 +90,38 @@ function Sphere() {
       float noise = snoise(position * 1.5 + uTime * 0.15);
       float displacement = noise * 0.15;
       vDisplacement = displacement;
+
+      vec2 sparkleCell = floor(vUv * 13.0);
+      float sparklePattern = random(sparkleCell);
+      float sparkleSpeed = mix(0.22, 0.55, sparklePattern);
+      float sparkleTime = fract(uTime * sparkleSpeed + sparklePattern * 13.37);
+
+      vec2 localUv = fract(vUv * 13.0) - 0.5;
+      float cellWarp = snoise(vec3(localUv * 4.2 + sparkleCell * 0.17, uTime * 0.22 + sparklePattern * 4.0));
+      vec2 warpedUv = localUv + vec2(
+        snoise(vec3(localUv * 3.1 + sparkleCell * 0.11, uTime * 0.15)),
+        snoise(vec3(localUv * 3.1 + sparkleCell * 0.19, uTime * 0.18))
+      ) * 0.16;
+      float blobMask = smoothstep(0.7, 0.01, length(warpedUv) + cellWarp * 0.17);
+
+      float fadeInOut = smoothstep(0.0, 0.22, sparkleTime) * smoothstep(1.0, 0.78, sparkleTime);
+      float twinkle = 0.65 + 0.35 * sin((sparkleTime + sparklePattern) * 6.28318);
+
+      float sparkle = smoothstep(0.85, 0.95, sparklePattern) *
+                      fadeInOut *
+                      twinkle *
+                      blobMask;
+
+      float edgeSpeed = mix(0.45, 1.0, sparklePattern);
+      float edgeSparkle = smoothstep(0.7, 1.0, vDisplacement) *
+                          (sin(uTime * edgeSpeed + vUv.x * 10.0 + sparklePattern * 20.0) * 0.5 + 0.5);
+
+      float totalSparkle = max(sparkle, edgeSparkle * 0.44);
+      vSparkle = totalSparkle;
+
+      float sparkleDeform = totalSparkle * 0.34;
       
-      vec3 newPosition = position + normal * displacement;
+      vec3 newPosition = position + normal * (displacement + sparkleDeform);
       gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
     }
   `
@@ -95,46 +130,27 @@ function Sphere() {
     uniform float uTime;
     varying vec2 vUv;
     varying float vDisplacement;
-    
-    // Función de ruido simplificada para destellos
-    float random(vec2 st) {
-      return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453123);
-    }
+    varying float vSparkle;
     
     void main() {
       float intensity = 0.3 + vDisplacement * 2.0;
-      vec3 baseColor = vec3(intensity);
+      vec3 baseColor = vec3(intensity) * vec3(0.72, 0.85, 1.0);
       
       float line = smoothstep(0.0, 0.02, abs(fract(vUv.x * 20.0) - 0.5));
       line *= smoothstep(0.0, 0.02, abs(fract(vUv.y * 20.0) - 0.5));
       
-      // Destellos de color cyan
-      vec3 accentColor = vec3(0.22, 0.8, 0.89); // Color cyan #39cbe3
+      // Destellos azul hielo
+      vec3 accentColor = vec3(0.49, 0.83, 0.99); // #7dd3fc
       
-      // Crear patrón de destellos aleatorios basado en UV y tiempo
-      float sparklePattern = random(floor(vUv * 15.0));
-      float sparkleTime = fract(uTime * 0.8 + sparklePattern * 6.28);
-      
-      // Destellos intermitentes
-      float sparkle = smoothstep(0.85, 0.95, sparklePattern) * 
-                      smoothstep(0.9, 1.0, sin(sparkleTime * 3.14159)) *
-                      smoothstep(0.0, 0.1, sparkleTime) *
-                      smoothstep(1.0, 0.9, sparkleTime);
-      
-      // Destellos en los bordes con noise
-      float edgeSparkle = smoothstep(0.7, 1.0, vDisplacement) * 
-                          sin(uTime * 2.0 + vUv.x * 10.0) * 0.5 + 0.5;
-      
-      // Combinar destellos
-      float totalSparkle = max(sparkle, edgeSparkle * 0.3);
+      float totalSparkle = vSparkle;
       
       // Mezclar color base con destellos cyan
-      vec3 finalColor = mix(baseColor, accentColor, totalSparkle * 0.7);
+      vec3 finalColor = mix(baseColor, accentColor, totalSparkle * 0.92);
       
       // Aplicar líneas de wireframe
       finalColor = finalColor * (1.0 - line * 0.5);
       
-      gl_FragColor = vec4(finalColor, 0.6 + totalSparkle * 0.3);
+      gl_FragColor = vec4(finalColor, 0.64 + totalSparkle * 0.36);
     }
   `
 
@@ -146,35 +162,29 @@ function Sphere() {
 
     if (meshRef.current) {
       if (isDragging) {
-        // Calcular el delta del movimiento del mouse
         const deltaX = (pointer.x - previousPointer.current.x) * 3
         const deltaY = (pointer.y - previousPointer.current.y) * 3
-        
-        // Actualizar la rotación basada en el arrastre
-        setRotation(prev => ({
+
+        setRotation((prev) => ({
           x: prev.x - deltaY,
           y: prev.y + deltaX,
         }))
-        
+
         previousPointer.current = { x: pointer.x, y: pointer.y }
-        
-        // Aplicar la rotación inmediatamente
+
         meshRef.current.rotation.x = rotation.x
         meshRef.current.rotation.y = rotation.y
       } else {
-        // Rotación automática suave cuando no se arrastra
         autoRotation.current += delta * 0.1
-        
-        // Volver suavemente a la rotación automática
+
         const targetX = Math.sin(autoRotation.current * 0.3) * 0.2
         const targetY = autoRotation.current
         const targetZ = Math.cos(autoRotation.current * 0.2) * 0.1
-        
+
         meshRef.current.rotation.x = MathUtils.lerp(meshRef.current.rotation.x, targetX, 0.05)
         meshRef.current.rotation.y = MathUtils.lerp(meshRef.current.rotation.y, targetY, 0.05)
         meshRef.current.rotation.z = MathUtils.lerp(meshRef.current.rotation.z, targetZ, 0.05)
-        
-        // Actualizar el estado de rotación
+
         setRotation({
           x: meshRef.current.rotation.x,
           y: meshRef.current.rotation.y,
@@ -187,13 +197,13 @@ function Sphere() {
     e.stopPropagation()
     setIsDragging(true)
     previousPointer.current = { x: pointer.x, y: pointer.y }
-    gl.domElement.style.cursor = 'grabbing'
+    gl.domElement.style.cursor = "grabbing"
   }
 
   const handlePointerUp = (e: any) => {
     if (e) e.stopPropagation()
     setIsDragging(false)
-    gl.domElement.style.cursor = isHovered ? 'grab' : 'auto'
+    gl.domElement.style.cursor = isHovered ? "grab" : "auto"
   }
 
   const handlePointerMove = (e: any) => {
@@ -206,7 +216,7 @@ function Sphere() {
     e.stopPropagation()
     setIsHovered(true)
     if (!isDragging) {
-      gl.domElement.style.cursor = 'grab'
+      gl.domElement.style.cursor = "grab"
     }
   }
 
@@ -214,24 +224,23 @@ function Sphere() {
     e.stopPropagation()
     setIsHovered(false)
     if (!isDragging) {
-      gl.domElement.style.cursor = 'auto'
+      gl.domElement.style.cursor = "auto"
     }
   }
 
-  // Limpiar el cursor cuando se suelta fuera del canvas
   useEffect(() => {
     const handleGlobalPointerUp = () => {
       if (isDragging) {
         handlePointerUp(null)
       }
     }
-    
-    window.addEventListener('pointerup', handleGlobalPointerUp)
-    return () => window.removeEventListener('pointerup', handleGlobalPointerUp)
+
+    window.addEventListener("pointerup", handleGlobalPointerUp)
+    return () => window.removeEventListener("pointerup", handleGlobalPointerUp)
   }, [isDragging])
 
   return (
-    <mesh 
+    <mesh
       ref={meshRef}
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
@@ -276,11 +285,10 @@ export function SentientSphere() {
         antialias: true,
         alpha: true,
       }}
-      style={{ pointerEvents: 'auto' }}
+      style={{ pointerEvents: "auto" }}
     >
       <ambientLight intensity={0.5} />
       <Sphere />
     </Canvas>
   )
 }
-

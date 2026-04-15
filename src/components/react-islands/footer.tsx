@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { ArrowUpRight } from "lucide-react"
+import SocialLinks from "./social-links"
 
 export default function Footer() {
   const [time, setTime] = useState("")
@@ -27,7 +28,7 @@ export default function Footer() {
     <footer className="relative">
       {/* Main CTA */}
       <motion.a
-        href="mailto:hello@example.com"
+        href="mailto:efren.dataviz@gmail.com?subject=Consulta%20desde%20tu%20portafolio&body=Hola%20Efren%2C%0A%0ATe%20escribo%20desde%20tu%20portafolio%20porque%20me%20interesa%20conversar%20sobre%20un%20proyecto.%0A%0AQuedo%20atento%2Fa%2C%0A%5BTu%20nombre%5D"
         data-cursor-hover
         className="relative block overflow-hidden"
         onMouseEnter={() => setIsHovered(true)}
@@ -75,24 +76,12 @@ export default function Footer() {
           </div>
 
           {/* Links */}
-          <div className="flex gap-8">
-            {["LinkedIn", "GitHub", "Twitter"].map((link) => (
-              <a
-                key={link}
-                href="#"
-                data-cursor-hover
-                className="font-mono text-xs tracking-widest text-muted-foreground hover:text-white transition-colors duration-300"
-              >
-                {link}
-              </a>
-            ))}
-          </div>
+          <SocialLinks accentColor="#39cbe3" />
 
           {/* Copyright */}
-          <p className="font-mono text-xs tracking-widest text-muted-foreground">© {new Date().getFullYear()}</p>
+          <p className="font-mono text-xs tracking-widest text-muted-foreground">ï¿½ {new Date().getFullYear()}</p>
         </div>
       </div>
     </footer>
   )
 }
-

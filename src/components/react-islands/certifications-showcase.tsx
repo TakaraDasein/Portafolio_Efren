@@ -165,10 +165,11 @@ export default function CertificationsShowcase() {
   const containerRef = useRef<HTMLDivElement>(null)
 
   const activeItems = contentByTab[activeTab]
+  const isSingleItemTab = activeItems.length === 1
 
   // El item que se muestra en el panel de info:
   // si hay hover → ese item; si no → ninguno (panel vacío / placeholder)
-  const infoIndex = hoveredIndex !== null ? hoveredIndex : null
+  const infoIndex = isSingleItemTab ? 0 : hoveredIndex !== null ? hoveredIndex : null
   const infoItem = infoIndex !== null ? activeItems[infoIndex] : null
 
   const handleTabChange = (tab: CredentialCategory) => {
@@ -247,8 +248,8 @@ export default function CertificationsShowcase() {
                 style={{ height: "clamp(340px, 55vh, 620px)" }}
               >
                 {activeItems.map((item, index) => {
-                  const isExpanded = hoveredIndex === index
-                  const isCollapsed = hoveredIndex !== null && hoveredIndex !== index
+                  const isExpanded = isSingleItemTab || hoveredIndex === index
+                  const isCollapsed = !isSingleItemTab && hoveredIndex !== null && hoveredIndex !== index
 
                   return (
                     <motion.div
@@ -262,8 +263,12 @@ export default function CertificationsShowcase() {
                         flexGrow: { type: "spring", stiffness: 300, damping: 30 },
                         opacity: { duration: 0.25 },
                       }}
-                      onMouseEnter={() => setHoveredIndex(index)}
-                      onMouseLeave={() => setHoveredIndex(null)}
+                      onMouseEnter={() => {
+                        if (!isSingleItemTab) setHoveredIndex(index)
+                      }}
+                      onMouseLeave={() => {
+                        if (!isSingleItemTab) setHoveredIndex(null)
+                      }}
                       data-cursor-hover
                       className="relative flex cursor-default select-none overflow-hidden border-r border-white/10 last:border-r-0"
                       style={{ minWidth: "3rem", flexShrink: 1, flexBasis: 0 }}
