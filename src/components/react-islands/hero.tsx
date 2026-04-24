@@ -24,18 +24,16 @@ export default function Hero() {
 
   // Frases rotativas con palabras clave resaltadas
   const phrases = [
-    { text: "Integración y depuración de ", highlight: "datos sociales multisectoriales" },
-    { text: "Diseño de ", highlight: "indicadores institucionales", text2: " y trazabilidad operativa" },
-    { text: "Modelado computacional del ", highlight: "comportamiento político" },
-    { text: "Análisis espacial multivariable con ", highlight: "SIG" },
-    { text: "Monitoreo de derechos humanos con ", highlight: "alerta temprana" },
-    { text: "Evaluación de impacto y ", highlight: "efectividad de políticas públicas" },
-    { text: "Inteligencia artificial aplicada a ", highlight: "problemas públicos complejos" },
-    { text: "Aprendizaje automático para ", highlight: "predicción y clasificación de riesgos" },
+    { text: "La pregunta correcta ", highlight: "transforma", text2: " los datos" },
+    { text: "Destilar la complejidad para hallar la ", highlight: "ruta de acción" },
+    { text: "La ética como ", highlight: "código de depuración" },
+    { text: "De la incertidumbre social al ", highlight: "bienestar común" },
+    { text: "Una correlación es una pista, no ", highlight: "una causa" },
+    { text: "Cada punto de datos es una ", highlight: "historia humana" },
   ]
 
   const rolePhrases = [
-    "Politólogo & Científico de Datos",
+    { main: "Politólogo", sub: "Social Data Science" },
   ]
 
   // Efecto de typing
@@ -170,7 +168,8 @@ export default function Hero() {
                     transition={{ duration: 0.35 }}
                     className="font-serif text-xs sm:text-sm md:text-base lg:text-lg italic tracking-wide text-white/80"
                   >
-                    {rolePhrases[roleIndex]}
+                    <span>{rolePhrases[roleIndex].main}</span>
+                    <span className="text-[10px] sm:text-xs md:text-sm lg:text-base text-white/60">; {rolePhrases[roleIndex].sub}</span>
                   </motion.p>
                 </AnimatePresence>
               </div>
