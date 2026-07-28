@@ -16,7 +16,7 @@ interface Particle {
   distance: number // Distancia a recorrer
 }
 
-export function DataParticles() {
+export function DataParticles({ color = "#39cbe3" }: { color?: string }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const particlesRef = useRef<Particle[]>([])
   const animationFrameRef = useRef<number>()
@@ -141,8 +141,8 @@ export function DataParticles() {
             }}
             className="absolute font-mono text-sm tracking-wider"
             style={{
-              color: '#39cbe3',
-              textShadow: '0 0 6px rgba(57, 203, 227, 0.4), 0 0 12px rgba(57, 203, 227, 0.2)',
+              color: color,
+              textShadow: `0 0 6px ${color}66, 0 0 12px ${color}33`,
               filter: 'blur(0px)',
             }}
           >
@@ -151,7 +151,7 @@ export function DataParticles() {
             <motion.span
               className="absolute inset-0 -z-10"
               style={{
-                color: '#39cbe3',
+                color: color,
                 opacity: 0.15,
               }}
               animate={{

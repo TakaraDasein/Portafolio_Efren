@@ -114,7 +114,7 @@ const strategicStages = [
   },
 ]
 
-export default function DataLifecycle() {
+export default function DataLifecycle({ accentColor = "#39cbe3" }: { accentColor?: string }) {
   const [activeStage, setActiveStage] = useState<number | null>(null)
   const [hoveredStage, setHoveredStage] = useState<number | null>(null)
   const [approach, setApproach] = useState<ApproachType>("strategic")
@@ -132,7 +132,7 @@ export default function DataLifecycle() {
         whileInView={{ scaleX: 1 }}
         viewport={{ once: true }}
         transition={{ duration: 1.2, ease: [0.25, 0.46, 0.45, 0.94] }}
-        className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#39cbe3] to-transparent origin-left"
+        className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-accent to-transparent origin-left"
       />
 
       {/* Section Header */}
@@ -145,7 +145,7 @@ export default function DataLifecycle() {
       >
         <p className="font-mono text-xs tracking-[0.3em] text-muted-foreground mb-4">04 • METODOLOGÍA</p>
         <h2 className="font-sans text-3xl md:text-5xl lg:text-6xl font-light tracking-tight mb-6">
-          Ciclo de Vida del <span className="italic text-[#39cbe3]">Dato</span>
+          Ciclo de Vida del <span className="italic text-accent">Dato</span>
         </h2>
         <p className="text-lg md:text-xl text-muted-foreground font-light max-w-3xl mb-8">
           {approach === "technical" 
@@ -159,7 +159,7 @@ export default function DataLifecycle() {
           <span className="font-mono text-xs tracking-wider text-muted-foreground">ENFOQUE:</span>
           <div className="relative inline-flex border-2 border-white/10 bg-[#0a0a0a]">
             <motion.div
-              className="absolute inset-y-0 w-1/2 bg-[#39cbe3]/20 border-2 border-[#39cbe3]"
+              className="absolute inset-y-0 w-1/2 bg-accent/20 border-2 border-accent"
               animate={{
                 x: approach === "technical" ? 0 : "100%",
               }}
@@ -198,18 +198,18 @@ export default function DataLifecycle() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="mt-6 p-4 border-l-2 border-[#39cbe3] bg-white/5"
+          className="mt-6 p-4 border-l-2 border-accent bg-white/5"
         >
           <p className="text-sm text-muted-foreground font-light leading-relaxed">
             {approach === "technical" ? (
               <>
-                <span className="text-[#39cbe3] font-medium">Perfil Técnico:</span> Ingenieros de Machine Learning, Estadísticos y Analistas de Datos expertos. 
+                <span className="text-accent font-medium">Perfil Técnico:</span> Ingenieros de Machine Learning, Estadísticos y Analistas de Datos expertos. 
                 Especialización en matemáticas, estadística e informática para crear modelos predictivos y extraer valor de conjuntos de datos empresariales 
                 mediante herramientas como R, Python, TensorFlow y Scikit-learn.
               </>
             ) : (
               <>
-                <span className="text-[#39cbe3] font-medium">Perfil Estratégico:</span> Profesionales de Business Intelligence y Gerentes de Proyectos Técnicos. 
+                <span className="text-accent font-medium">Perfil Estratégico:</span> Profesionales de Business Intelligence y Gerentes de Proyectos Técnicos. 
                 Interpretación de información para operaciones, finanzas e I+D. Maximizan insights para guiar la estrategia empresarial 
                 mediante dashboards ejecutivos, análisis de tendencias y gestión del cambio.
               </>
@@ -274,7 +274,7 @@ export default function DataLifecycle() {
                       <motion.div
                         animate={{
                           scale: isHovered || isActive ? 1.05 : 1,
-                          borderColor: isHovered || isActive ? stage.color : "rgba(255,255,255,0.1)",
+                          borderColor: isHovered || isActive ? "var(--accent)" : "rgba(255,255,255,0.1)",
                         }}
                         className="relative w-32 h-32 mx-auto mb-6 border-2 bg-[#0a0a0a] flex items-center justify-center"
                       >
@@ -287,7 +287,7 @@ export default function DataLifecycle() {
                           <Icon 
                             className="w-12 h-12" 
                             style={{ 
-                              color: isHovered || isActive ? stage.color : "rgba(255,255,255,0.5)" 
+                              color: isHovered || isActive ? "var(--accent)" : "rgba(255,255,255,0.5)" 
                             }}
                           />
                         </motion.div>
@@ -296,8 +296,8 @@ export default function DataLifecycle() {
                         <span 
                           className="absolute -top-3 -right-3 w-8 h-8 border-2 bg-[#0a0a0a] flex items-center justify-center font-mono text-xs font-bold"
                           style={{ 
-                            borderColor: stage.color,
-                            color: stage.color 
+                            borderColor: "var(--accent)",
+                            color: "var(--accent)" 
                           }}
                         >
                           {stage.id}
@@ -338,13 +338,13 @@ export default function DataLifecycle() {
                   return (
                     <div 
                       className="border-2 bg-[#0a0a0a] p-8 md:p-12"
-                      style={{ borderColor: stage.color }}
+                      style={{ borderColor: "var(--accent)" }}
                     >
                       <div className="grid md:grid-cols-2 gap-8 items-start">
                         {/* Left: Details */}
                         <div>
                           <div className="flex items-center gap-4 mb-4">
-                            <Icon className="w-8 h-8" style={{ color: stage.color }} />
+                            <Icon className="w-8 h-8" style={{ color: "var(--accent)" }} />
                             <div>
                               <p className="font-mono text-xs tracking-widest text-muted-foreground uppercase">
                                 {stage.phase}
@@ -373,7 +373,7 @@ export default function DataLifecycle() {
                                 transition={{ delay: idx * 0.1 }}
                                 className="flex items-center gap-2 border border-white/10 bg-white/5 px-3 py-2 group hover:border-white/30 transition-colors"
                               >
-                                <ArrowRight className="w-3 h-3" style={{ color: stage.color }} />
+                                <ArrowRight className="w-3 h-3" style={{ color: "var(--accent)" }} />
                                 <span className="font-mono text-xs">{method}</span>
                               </motion.div>
                             ))}
@@ -424,21 +424,21 @@ export default function DataLifecycle() {
                 <div 
                   className="border-2 bg-[#0a0a0a] p-6 transition-all duration-300"
                   style={{ 
-                    borderColor: isActive ? stage.color : "rgba(255,255,255,0.1)" 
+                    borderColor: isActive ? "var(--accent)" : "rgba(255,255,255,0.1)" 
                   }}
                 >
                   <div className="flex items-start gap-4 mb-4">
                     <div 
                       className="w-16 h-16 border-2 flex items-center justify-center flex-shrink-0"
-                      style={{ borderColor: stage.color }}
+                      style={{ borderColor: "var(--accent)" }}
                     >
-                      <Icon className="w-8 h-8" style={{ color: stage.color }} />
+                      <Icon className="w-8 h-8" style={{ color: "var(--accent)" }} />
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <span 
                           className="font-mono text-xs font-bold"
-                          style={{ color: stage.color }}
+                          style={{ color: "var(--accent)" }}
                         >
                           0{stage.id}
                         </span>
@@ -467,7 +467,7 @@ export default function DataLifecycle() {
                               key={method}
                               className="flex items-center gap-2 border border-white/10 bg-white/5 px-3 py-2"
                             >
-                              <ArrowRight className="w-3 h-3" style={{ color: stage.color }} />
+                              <ArrowRight className="w-3 h-3" style={{ color: "var(--accent)" }} />
                               <span className="font-mono text-xs">{method}</span>
                             </div>
                           ))}

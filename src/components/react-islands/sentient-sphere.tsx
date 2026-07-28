@@ -2,16 +2,16 @@
 
 import { useRef, useMemo, useEffect, useState } from "react"
 import { Canvas, useFrame, useThree } from "@react-three/fiber"
-import { MathUtils } from "three"
+import { MathUtils, Color } from "three"
 import type { Mesh, ShaderMaterial } from "three"
 
-function Sphere() {
+function Sphere({ accentColor = "#7dd3fc" }: { accentColor?: string }) {
   const meshRef = useRef<Mesh>(null)
   const materialRef = useRef<ShaderMaterial>(null)
   const { pointer, gl } = useThree()
   const [isDragging, setIsDragging] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
-  const [rotation, setRotation] = useState({ x: 0, y: 0 })
+  const rotationRef = useRef({ x: 0, y: 0 })
   const previousPointer = useRef({ x: 0, y: 0 })
   const autoRotation = useRef(0)
 
@@ -19,9 +19,17 @@ function Sphere() {
     () => ({
       uTime: { value: 0 },
       uMouse: { value: [0, 0] },
+      uAccentColor: { value: [0.49, 0.80, 0.99] },
     }),
     [],
   )
+
+  useEffect(() => {
+    const c = new Color(accentColor)
+    if (materialRef.current) {
+      materialRef.current.uniforms.uAccentColor.value = [c.r, c.g, c.b]
+    }
+  }, [accentColor])
 
   const vertexShader = `
     uniform float uTime;
@@ -128,6 +136,7 @@ function Sphere() {
 
   const fragmentShader = `
     uniform float uTime;
+    uniform vec3 uAccentColor;
     varying vec2 vUv;
     varying float vDisplacement;
     varying float vSparkle;
@@ -139,15 +148,10 @@ function Sphere() {
       float line = smoothstep(0.0, 0.02, abs(fract(vUv.x * 20.0) - 0.5));
       line *= smoothstep(0.0, 0.02, abs(fract(vUv.y * 20.0) - 0.5));
       
-      // Destellos azul hielo
-      vec3 accentColor = vec3(0.49, 0.83, 0.99); // #7dd3fc
-      
       float totalSparkle = vSparkle;
       
-      // Mezclar color base con destellos cyan
-      vec3 finalColor = mix(baseColor, accentColor, totalSparkle * 0.92);
+      vec3 finalColor = mix(baseColor, uAccentColor, totalSparkle * 0.92);
       
-      // Aplicar líneas de wireframe
       finalColor = finalColor * (1.0 - line * 0.5);
       
       gl_FragColor = vec4(finalColor, 0.64 + totalSparkle * 0.36);
@@ -165,15 +169,15 @@ function Sphere() {
         const deltaX = (pointer.x - previousPointer.current.x) * 3
         const deltaY = (pointer.y - previousPointer.current.y) * 3
 
-        setRotation((prev) => ({
-          x: prev.x - deltaY,
-          y: prev.y + deltaX,
-        }))
+        rotationRef.current = {
+          x: rotationRef.current.x - deltaY,
+          y: rotationRef.current.y + deltaX,
+        }
 
         previousPointer.current = { x: pointer.x, y: pointer.y }
 
-        meshRef.current.rotation.x = rotation.x
-        meshRef.current.rotation.y = rotation.y
+        meshRef.current.rotation.x = rotationRef.current.x
+        meshRef.current.rotation.y = rotationRef.current.y
       } else {
         autoRotation.current += delta * 0.1
 
@@ -185,10 +189,10 @@ function Sphere() {
         meshRef.current.rotation.y = MathUtils.lerp(meshRef.current.rotation.y, targetY, 0.05)
         meshRef.current.rotation.z = MathUtils.lerp(meshRef.current.rotation.z, targetZ, 0.05)
 
-        setRotation({
+        rotationRef.current = {
           x: meshRef.current.rotation.x,
           y: meshRef.current.rotation.y,
-        })
+        }
       }
     }
   })
@@ -261,7 +265,7 @@ function Sphere() {
   )
 }
 
-export function SentientSphere() {
+export function SentientSphere({ accentColor = "#7dd3fc" }: { accentColor?: string }) {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -288,7 +292,7 @@ export function SentientSphere() {
       style={{ pointerEvents: "auto" }}
     >
       <ambientLight intensity={0.5} />
-      <Sphere />
+      <Sphere accentColor={accentColor} />
     </Canvas>
   )
 }

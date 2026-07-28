@@ -881,31 +881,27 @@ function SplashCursor({
       return delta;
     }
 
+    function getCursorAccent() {
+      if (typeof document === "undefined") return null;
+      const val = getComputedStyle(document.documentElement).getPropertyValue("--cursor-color").trim();
+      if (!val || val === "undefined" || val === "null") return null;
+      const match = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(val);
+      if (!match) return null;
+      return {
+        r: parseInt(match[1], 16) / 255,
+        g: parseInt(match[2], 16) / 255,
+        b: parseInt(match[3], 16) / 255
+      };
+    }
+
     function generateColor() {
-      const baseColor = config.BACK_COLOR;
+      const cursorAccent = getCursorAccent();
+      const baseColor = cursorAccent || config.BACK_COLOR;
       
-      // Si es azul (home), usar la paleta cyan original de la web
-      if (baseColor.r === 0 && baseColor.g === 0 && baseColor.b === 1) {
-        const colors = [
-          { r: 57 / 255, g: 203 / 255, b: 227 / 255 },   // Cyan principal
-          { r: 100 / 255, g: 220 / 255, b: 235 / 255 },  // Cyan claro
-          { r: 30 / 255, g: 150 / 255, b: 180 / 255 },   // Cyan oscuro
-          { r: 0.5, g: 0.5, b: 0.6 },                     // Gris azulado
-          { r: 0.3, g: 0.3, b: 0.4 },                     // Gris oscuro azulado
-        ];
-        
-        const color = colors[Math.floor(Math.random() * colors.length)];
-        return {
-          r: color.r * 0.032,
-          g: color.g * 0.032,
-          b: color.b * 0.032
-        };
-      }
-      
-      // Para otros colores, crear variaciones del color principal
+      // Generar variaciones del color base
       const colors = [
-        { r: baseColor.r * 1.0, g: baseColor.g * 1.0, b: baseColor.b * 1.0 },      // Color pleno
-        { r: baseColor.r * 0.8, g: baseColor.g * 0.8, b: baseColor.b * 0.8 },      // 80% de intensidad
+        { r: baseColor.r * 1.0, g: baseColor.g * 1.0, b: baseColor.b * 1.0 },
+        { r: baseColor.r * 0.8, g: baseColor.g * 0.8, b: baseColor.b * 0.8 },
         { r: baseColor.r * 0.6, g: baseColor.g * 0.6, b: baseColor.b * 0.6 },      // 60% de intensidad
         { r: baseColor.r * 0.4, g: baseColor.g * 0.4, b: baseColor.b * 0.4 },      // 40% de intensidad
       ];
