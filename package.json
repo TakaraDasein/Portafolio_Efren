@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@astrojs/react": "4.4.2",
+    "@astrojs/vercel": "^9.0.5",
     "@fontsource/geist-mono": "5.2.7",
     "@fontsource/orbitron": "^5.2.8",
     "@fontsource/playfair-display": "5.2.8",

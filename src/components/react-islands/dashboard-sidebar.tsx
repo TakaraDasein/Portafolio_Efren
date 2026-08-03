@@ -9,6 +9,7 @@ import {
   BookOpen,
   Calendar,
   ChevronLeft,
+  LogOut,
 } from "lucide-react"
 
 export type ViewType =
@@ -57,28 +58,42 @@ export default function DashboardSidebar({
       <div className="flex items-center h-16 px-4 border-b border-sidebar-border shrink-0">
         <AnimatePresence mode="wait">
           {collapsed ? (
-            <motion.div
+            <motion.a
               key="collapsed-logo"
+              href="/"
+              title="Volver al inicio"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="mx-auto"
+              className="mx-auto block w-9 h-9 rounded-full overflow-hidden border border-white/20 hover:border-white/50 transition-colors"
             >
-              <span className="font-tech text-lg text-white">E</span>
-            </motion.div>
+              <img
+                src="/profile-photo.png"
+                alt="Volver al inicio"
+                className="w-full h-full object-cover object-top grayscale"
+              />
+            </motion.a>
           ) : (
-            <motion.div
+            <motion.a
               key="expanded-logo"
+              href="/"
+              title="Volver al inicio"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex items-center gap-2"
+              className="flex items-center gap-3 group"
             >
-              <span className="font-tech text-lg text-white">EF</span>
-              <span className="font-mono text-[10px] text-muted-foreground tracking-widest uppercase">
+              <div className="w-9 h-9 rounded-full overflow-hidden border border-white/20 group-hover:border-white/50 transition-colors shrink-0">
+                <img
+                  src="/profile-photo.png"
+                  alt="Volver al inicio"
+                  className="w-full h-full object-cover object-top grayscale"
+                />
+              </div>
+              <span className="font-mono text-[10px] text-muted-foreground tracking-widest uppercase group-hover:text-foreground transition-colors">
                 Dashboard
               </span>
-            </motion.div>
+            </motion.a>
           )}
         </AnimatePresence>
       </div>
@@ -120,8 +135,22 @@ export default function DashboardSidebar({
         })}
       </nav>
 
+      {/* Logout */}
+      <div className="px-2 pt-2 border-t border-sidebar-border shrink-0">
+        <form method="POST" action="/api/logout">
+          <button
+            type="submit"
+            title={collapsed ? "Cerrar sesión" : undefined}
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 text-muted-foreground hover:text-foreground transition-colors font-mono text-xs"
+          >
+            <LogOut className="w-4 h-4 shrink-0" />
+            {!collapsed && <span>Cerrar sesión</span>}
+          </button>
+        </form>
+      </div>
+
       {/* Collapse toggle */}
-      <div className="p-2 border-t border-sidebar-border shrink-0">
+      <div className="p-2 shrink-0">
         <button
           onClick={onToggle}
           className="w-full flex items-center justify-center gap-2 px-3 py-2 text-muted-foreground hover:text-foreground transition-colors font-mono text-xs"

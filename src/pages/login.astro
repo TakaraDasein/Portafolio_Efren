@@ -1,0 +1,48 @@
+---
+export const prerender = false
+import Layout from '../layouts/Layout.astro'
+
+const hasError = Astro.url.searchParams.get('error') === '1'
+---
+
+<Layout title="Acceso | Efren">
+  <main class="min-h-screen flex items-center justify-center bg-background px-4">
+    <form method="POST" action="/api/login" class="border border-white/10 p-8 w-full max-w-sm space-y-5">
+      <div class="text-center space-y-1">
+        <img
+          src="/profile-photo.png"
+          alt=""
+          class="w-14 h-14 rounded-full object-cover object-top grayscale mx-auto mb-3 border border-white/20"
+        />
+        <h1 class="font-sans text-2xl font-light">
+          Acceso al <span class="italic text-white">Panel</span>
+        </h1>
+        <p class="font-mono text-[10px] text-muted-foreground tracking-widest uppercase">
+          Sistema Personal
+        </p>
+      </div>
+
+      {hasError && (
+        <p class="font-mono text-xs text-white/80 text-center border border-white/20 py-2">
+          Contraseña incorrecta.
+        </p>
+      )}
+
+      <input
+        type="password"
+        name="password"
+        placeholder="Contraseña"
+        autofocus
+        required
+        class="w-full bg-transparent border border-white/10 px-4 py-3 font-mono text-sm focus:border-white focus:outline-none transition-colors"
+      />
+
+      <button
+        type="submit"
+        class="w-full px-6 py-3 bg-white text-black font-mono text-xs tracking-wider hover:bg-gray-300 transition-colors"
+      >
+        ENTRAR
+      </button>
+    </form>
+  </main>
+</Layout>

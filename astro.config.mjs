@@ -1,6 +1,7 @@
 ﻿// @ts-check
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
+import vercel from '@astrojs/vercel';
 import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -10,9 +11,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // https://astro.build/config
 export default defineConfig({
   integrations: [react()],
-  
-  // Optimización para Vercel
+
+  // El sitio sigue siendo estático por defecto; /dashboard, /login y sus rutas de
+  // API se marcan con `export const prerender = false` para renderizarse on-demand
+  // (necesario para el login con cookie firmada en servidor).
   output: 'static',
+  adapter: vercel(),
   compressHTML: true,
 
   vite: {
