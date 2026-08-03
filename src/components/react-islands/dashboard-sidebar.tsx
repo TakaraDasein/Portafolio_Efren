@@ -64,7 +64,7 @@ export default function DashboardSidebar({
               exit={{ opacity: 0 }}
               className="mx-auto"
             >
-              <span className="font-tech text-lg text-cyan-500">E</span>
+              <span className="font-tech text-lg text-white">E</span>
             </motion.div>
           ) : (
             <motion.div
@@ -74,7 +74,7 @@ export default function DashboardSidebar({
               exit={{ opacity: 0 }}
               className="flex items-center gap-2"
             >
-              <span className="font-tech text-lg text-cyan-500">EF</span>
+              <span className="font-tech text-lg text-white">EF</span>
               <span className="font-mono text-[10px] text-muted-foreground tracking-widest uppercase">
                 Dashboard
               </span>
@@ -96,7 +96,7 @@ export default function DashboardSidebar({
                 w-full flex items-center gap-3 px-3 py-2.5 rounded-sm transition-all duration-200
                 font-mono text-xs tracking-wider
                 ${isActive
-                  ? "bg-cyan-500/10 text-cyan-500 border-l-2 border-cyan-500"
+                  ? "bg-white/10 text-white border-l-2 border-white"
                   : "text-muted-foreground hover:text-foreground hover:bg-white/5 border-l-2 border-transparent"
                 }
               `}

@@ -36,7 +36,7 @@ export default function Footer() {
       >
         {/* Background Curtain */}
         <motion.div
-          className="absolute inset-0 bg-[#2563eb]"
+          className="absolute inset-0 bg-white"
           initial={{ y: "100%" }}
           animate={{ y: isHovered ? "0%" : "100%" }}
           transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
@@ -76,7 +76,7 @@ export default function Footer() {
           </div>
 
           {/* Links */}
-          <SocialLinks accentColor="#39cbe3" />
+          <SocialLinks accentColor="#ffffff" />
 
           {/* Copyright */}
           <p className="font-mono text-xs tracking-widest text-muted-foreground">� {new Date().getFullYear()}</p>

@@ -88,10 +88,10 @@ export default function Navbar() {
                 data-cursor-hover
                 title="Dashboard"
               >
-                <svg className="w-5 h-5 text-muted-foreground group-hover:text-cyan-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-muted-foreground group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                 </svg>
-                <span className="font-mono text-[10px] tracking-wider text-muted-foreground group-hover:text-cyan-500 transition-colors">
+                <span className="font-mono text-[10px] tracking-wider text-muted-foreground group-hover:text-white transition-colors">
                   SISTEMA
                 </span>
               </a>

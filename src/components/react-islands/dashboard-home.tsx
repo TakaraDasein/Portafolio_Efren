@@ -19,7 +19,8 @@ export default function DashboardHome() {
   const { projects, routines, healthMetrics, researchSeasons, calendarEvents } = data
 
   const activeProjects = projects.filter((p) => p.status === "active").length
-  const completedToday = routines.filter(
+  const activeRoutines = routines.filter((r) => !r.paused)
+  const completedToday = activeRoutines.filter(
     (r) => r.lastCompleted === new Date().toISOString().split("T")[0],
   ).length
   const totalChapters = researchSeasons.reduce(
@@ -40,38 +41,38 @@ export default function DashboardHome() {
       value: activeProjects,
       total: projects.length,
       icon: FolderKanban,
-      color: "text-cyan-500",
-      bg: "bg-cyan-500/10",
+      color: "text-white",
+      bg: "bg-white/10",
     },
     {
       label: "Rutinas Hoy",
       value: completedToday,
-      total: routines.length,
+      total: activeRoutines.length,
       icon: Repeat,
-      color: "text-emerald-500",
-      bg: "bg-emerald-500/10",
+      color: "text-white",
+      bg: "bg-white/10",
     },
     {
       label: "Registros Salud",
       value: healthMetrics.length,
       icon: Heart,
-      color: "text-rose-500",
-      bg: "bg-rose-500/10",
+      color: "text-white",
+      bg: "bg-white/10",
     },
     {
       label: "Capítulos",
       value: publishedChapters,
       total: totalChapters,
       icon: BookOpen,
-      color: "text-violet-500",
-      bg: "bg-violet-500/10",
+      color: "text-white",
+      bg: "bg-white/10",
     },
     {
       label: "Eventos Hoy",
       value: todayEvents,
       icon: Calendar,
-      color: "text-amber-500",
-      bg: "bg-amber-500/10",
+      color: "text-white",
+      bg: "bg-white/10",
     },
   ]
 
@@ -82,7 +83,7 @@ export default function DashboardHome() {
       {/* Header */}
       <div>
         <h1 className="font-sans text-4xl font-light tracking-tight">
-          Panel de <span className="italic text-cyan-500">Control</span>
+          Panel de <span className="italic text-white">Control</span>
         </h1>
         <p className="font-mono text-xs text-muted-foreground mt-2 tracking-wider">
           Visión general de tu ecosistema personal
@@ -134,14 +135,14 @@ export default function DashboardHome() {
           className="border border-white/10 p-6"
         >
           <h3 className="font-sans text-lg font-light mb-4">
-            Acciones <span className="italic text-cyan-500">Rápidas</span>
+            Acciones <span className="italic text-white">Rápidas</span>
           </h3>
           <div className="grid grid-cols-2 gap-3">
             {[
-              { icon: Target, label: "Nuevo Proyecto", color: "text-cyan-500" },
-              { icon: Zap, label: "Registrar Rutina", color: "text-emerald-500" },
-              { icon: Activity, label: "Medir Salud", color: "text-rose-500" },
-              { icon: BookOpen, label: "Escribir Capítulo", color: "text-violet-500" },
+              { icon: Target, label: "Nuevo Proyecto", color: "text-white" },
+              { icon: Zap, label: "Registrar Rutina", color: "text-white" },
+              { icon: Activity, label: "Medir Salud", color: "text-white" },
+              { icon: BookOpen, label: "Escribir Capítulo", color: "text-white" },
             ].map((action) => {
               const Icon = action.icon
               return (
@@ -167,21 +168,24 @@ export default function DashboardHome() {
           className="border border-white/10 p-6"
         >
           <h3 className="font-sans text-lg font-light mb-4">
-            Progreso <span className="italic text-cyan-500">Semanal</span>
+            Progreso <span className="italic text-white">Semanal</span>
           </h3>
           <div className="space-y-4">
-            {routines.slice(0, 4).map((routine) => {
+            {activeRoutines.slice(0, 4).map((routine) => {
               const dayOfWeek = new Date().getDay()
               const doneToday = routine.lastCompleted === new Date().toISOString().split("T")[0]
               return (
                 <div key={routine.id} className="flex items-center gap-3">
                   <div
                     className={`w-2 h-2 rounded-full ${
-                      doneToday ? "bg-emerald-500" : "bg-white/10"
+                      doneToday ? "bg-white" : "bg-white/10"
                     }`}
                   />
                   <span className="font-mono text-xs text-muted-foreground flex-1">
                     {routine.name}
+                  </span>
+                  <span className="font-mono text-[10px] text-white/80">
+                    {routine.hour}:00
                   </span>
                   <span className="font-mono text-[10px] text-muted-foreground">
                     {routine.streak} días seguidos
@@ -204,7 +208,7 @@ export default function DashboardHome() {
         >
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-sans text-lg font-light">
-              <span className="italic text-cyan-500">{season.title}</span>
+              <span className="italic text-white">{season.title}</span>
             </h3>
             <span className="font-mono text-[10px] text-muted-foreground tracking-wider">
               {season.chapters.filter((c) => c.status === "published").length} /{" "}
@@ -218,7 +222,7 @@ export default function DashboardHome() {
                 className="flex items-center gap-3 p-3 bg-white/5 border-l-2"
                 style={{
                   borderColor:
-                    chapter.status === "published" ? "#39cbe3" : "rgba(255,255,255,0.1)",
+                    chapter.status === "published" ? "#ffffff" : "rgba(255,255,255,0.1)",
                 }}
               >
                 <span className="font-mono text-[10px] text-muted-foreground w-6">
@@ -230,7 +234,7 @@ export default function DashboardHome() {
                 <span
                   className={`font-mono text-[9px] tracking-wider uppercase px-2 py-0.5 border ${
                     chapter.status === "published"
-                      ? "border-emerald-500/30 text-emerald-500"
+                      ? "border-white/30 text-white"
                       : "border-white/10 text-muted-foreground"
                   }`}
                 >

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { DashboardProvider } from "../../data/dashboard-store"
 import DashboardSidebar, { type ViewType } from "./dashboard-sidebar"
@@ -10,6 +10,7 @@ import DashboardRoutines from "./dashboard-routines"
 import DashboardHealth from "./dashboard-health"
 import DashboardResearch from "./dashboard-research"
 import DashboardCalendar from "./dashboard-calendar"
+import DashboardBackupControls from "./dashboard-backup-controls"
 
 const views: Record<ViewType, React.FC> = {
   home: DashboardHome,
@@ -23,6 +24,16 @@ const views: Record<ViewType, React.FC> = {
 function DashboardShell() {
   const [activeView, setActiveView] = useState<ViewType>("home")
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+
+  // El cursor con efecto de "splash" (fluid trail) se monta globalmente en Layout.astro
+  // y lee esta variable CSS para su color. La forzamos a escala de grises solo mientras
+  // el dashboard está activo, y la restauramos al salir.
+  useEffect(() => {
+    document.documentElement.style.setProperty("--cursor-color", "#e5e5e5")
+    return () => {
+      document.documentElement.style.removeProperty("--cursor-color")
+    }
+  }, [])
 
   const ViewComponent = views[activeView]
 
@@ -43,10 +54,10 @@ function DashboardShell() {
         <header className="h-16 border-b border-white/10 flex items-center justify-between px-8 bg-background/80 backdrop-blur-md sticky top-0 z-30">
           <div>
             <h2 className="font-sans text-lg font-light">
-              <span className="italic text-cyan-500">Sistema</span> Personal
+              <span className="italic text-white">Sistema</span> Personal
             </h2>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-6">
             <span className="font-mono text-[10px] text-muted-foreground tracking-wider">
               {new Date().toLocaleDateString("es-CO", {
                 weekday: "long",
@@ -55,6 +66,7 @@ function DashboardShell() {
                 day: "numeric",
               })}
             </span>
+            <DashboardBackupControls />
           </div>
         </header>
 

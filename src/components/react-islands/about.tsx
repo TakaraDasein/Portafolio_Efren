@@ -4,10 +4,10 @@ import { motion } from "framer-motion"
 
 const statements = [
   "Transformo datos complejos en insights accionables.",
-  "La visualización efectiva comunica historias ocultas.",
-  "Cada métrica cuenta una parte de la verdad.",
-  "Los datos no mienten, solo necesitan interpretación.",
-  "El análisis predictivo anticipa el futuro.",
+  "La visualizaciï¿½n efectiva comunica historias ocultas.",
+  "Cada mï¿½trica cuenta una parte de la verdad.",
+  "Los datos no mienten, solo necesitan interpretaciï¿½n.",
+  "El anï¿½lisis predictivo anticipa el futuro.",
 ]
 
 export default function About() {
@@ -20,7 +20,6 @@ export default function About() {
         transition={{ duration: 0.8 }}
         className="px-8 md:px-12 mb-12 md:mb-16"
       >
-        <p className="font-mono text-xs tracking-[0.3em] text-muted-foreground mb-4">03 — FILOSOFÍA</p>
         <h2 className="font-sans text-3xl md:text-5xl font-light italic">Flujo de Pensamiento</h2>
       </motion.div>
 

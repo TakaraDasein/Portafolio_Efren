@@ -16,18 +16,24 @@ import {
   ChevronDown,
   Edit3,
 } from "lucide-react"
+import MiniChart, { chartTypes, type ChartType } from "./mini-charts"
+
+const emptySeasonForm = { title: "", subtitle: "", description: "", order: 1, icon: "bars" as ChartType }
 
 export default function DashboardResearch() {
   const { data, addSeason, updateSeason, deleteSeason, addChapter, updateChapter, deleteChapter } =
     useDashboard()
+  const sortedSeasons = [...data.researchSeasons].sort((a, b) => a.order - b.order)
+
   const [expandedSeason, setExpandedSeason] = useState<string | null>(
-    data.researchSeasons[0]?.id ?? null,
+    sortedSeasons[0]?.id ?? null,
   )
   const [expandedChapter, setExpandedChapter] = useState<string | null>(null)
   const [showSeasonForm, setShowSeasonForm] = useState(false)
   const [showChapterForm, setShowChapterForm] = useState(false)
+  const [editingSeasonId, setEditingSeasonId] = useState<string | null>(null)
   const [editingChapterId, setEditingChapterId] = useState<string | null>(null)
-  const [seasonForm, setSeasonForm] = useState({ title: "", subtitle: "", description: "", order: 1 })
+  const [seasonForm, setSeasonForm] = useState(emptySeasonForm)
   const [chapterForm, setChapterForm] = useState({
     seasonId: "",
     title: "",
@@ -41,7 +47,8 @@ export default function DashboardResearch() {
   const [resourceInput, setResourceInput] = useState("")
 
   const resetSeasonForm = () => {
-    setSeasonForm({ title: "", subtitle: "", description: "", order: data.researchSeasons.length + 1 })
+    setSeasonForm({ ...emptySeasonForm, order: data.researchSeasons.length + 1 })
+    setEditingSeasonId(null)
     setShowSeasonForm(false)
   }
 
@@ -61,10 +68,26 @@ export default function DashboardResearch() {
     setResourceInput("")
   }
 
-  const handleAddSeason = () => {
+  const handleSaveSeason = () => {
     if (!seasonForm.title.trim()) return
-    addSeason(seasonForm)
+    if (editingSeasonId) {
+      updateSeason(editingSeasonId, seasonForm)
+    } else {
+      addSeason(seasonForm)
+    }
     resetSeasonForm()
+  }
+
+  const handleEditSeason = (season: ResearchSeason) => {
+    setSeasonForm({
+      title: season.title,
+      subtitle: season.subtitle,
+      description: season.description,
+      order: season.order,
+      icon: season.icon,
+    })
+    setEditingSeasonId(season.id)
+    setShowSeasonForm(true)
   }
 
   const handleAddChapter = () => {
@@ -105,7 +128,7 @@ export default function DashboardResearch() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-sans text-4xl font-light tracking-tight">
-            Centro de <span className="italic text-cyan-500">Investigación</span>
+            Centro de <span className="italic text-white">Investigación</span>
           </h1>
           <p className="font-mono text-xs text-muted-foreground mt-2 tracking-wider">
             {data.researchSeasons.length} temporadas •{" "}
@@ -114,10 +137,11 @@ export default function DashboardResearch() {
         </div>
         <button
           onClick={() => {
-            setSeasonForm({ ...seasonForm, order: data.researchSeasons.length + 1 })
+            setSeasonForm({ ...emptySeasonForm, order: data.researchSeasons.length + 1 })
+            setEditingSeasonId(null)
             setShowSeasonForm(true)
           }}
-          className="flex items-center gap-2 px-4 py-2 bg-cyan-500 text-black font-mono text-xs tracking-wider hover:bg-cyan-400 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-white text-black font-mono text-xs tracking-wider hover:bg-gray-300 transition-colors"
         >
           <Plus className="w-3.5 h-3.5" />
           NUEVA TEMPORADA
@@ -138,38 +162,69 @@ export default function DashboardResearch() {
         </motion.div>
       )}
 
-      {data.researchSeasons.map((season) => (
+      {sortedSeasons.map((season) => {
+        const isExpanded = expandedSeason === season.id
+        const sortedChapters = [...season.chapters].sort((a, b) => a.order - b.order)
+        const publishedCount = season.chapters.filter((c) => c.status === "published").length
+        const progress = season.chapters.length
+          ? Math.round((publishedCount / season.chapters.length) * 100)
+          : 0
+        return (
         <motion.div
           key={season.id}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="border border-white/10"
+          className={`border transition-colors ${isExpanded ? "border-white/30" : "border-white/10"}`}
         >
           {/* Season Header */}
           <div
-            onClick={() => setExpandedSeason(expandedSeason === season.id ? null : season.id)}
-            className="flex items-center justify-between p-6 cursor-pointer hover:bg-white/5 transition-colors"
+            onClick={() => setExpandedSeason(isExpanded ? null : season.id)}
+            className="flex items-start justify-between gap-4 p-6 cursor-pointer hover:bg-white/5 transition-colors"
           >
-            <div className="flex items-center gap-4">
-              <div className="p-2 bg-cyan-500/10 rounded-sm">
-                <BookOpen className="w-5 h-5 text-cyan-500" />
+            <div className="flex items-start gap-4 min-w-0 flex-1">
+              <div className="w-14 h-14 shrink-0 border border-white/10 flex items-center justify-center p-2">
+                <MiniChart
+                  type={season.icon}
+                  size={36}
+                  active={isExpanded}
+                  color={isExpanded ? "#ffffff" : "rgba(255,255,255,0.5)"}
+                />
               </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-[10px] text-cyan-500 tracking-wider">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-mono text-[10px] text-white tracking-wider">
                     {season.subtitle}
                   </span>
                   <span className="font-mono text-[10px] text-muted-foreground">
-                    {season.chapters.length} capítulos
+                    {publishedCount}/{season.chapters.length} publicado
                   </span>
                 </div>
                 <h3 className="font-sans text-xl font-light mt-1">{season.title}</h3>
                 <p className="font-mono text-xs text-muted-foreground mt-1 line-clamp-1">
                   {season.description}
                 </p>
+                {/* Progress bar */}
+                <div className="h-1 bg-white/10 mt-3 max-w-xs">
+                  <motion.div
+                    className="h-full bg-white/60"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${progress}%` }}
+                    transition={{ duration: 0.6, ease: "easeOut" }}
+                  />
+                </div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleEditSeason(season)
+                }}
+                className="p-2 text-muted-foreground hover:text-white transition-colors"
+                title="Editar temporada"
+              >
+                <Edit3 className="w-4 h-4" />
+              </button>
               <button
                 onClick={(e) => {
                   e.stopPropagation()
@@ -180,7 +235,7 @@ export default function DashboardResearch() {
                   })
                   setShowChapterForm(true)
                 }}
-                className="p-2 text-muted-foreground hover:text-cyan-500 transition-colors"
+                className="p-2 text-muted-foreground hover:text-white transition-colors"
                 title="Agregar capítulo"
               >
                 <Plus className="w-4 h-4" />
@@ -190,12 +245,12 @@ export default function DashboardResearch() {
                   e.stopPropagation()
                   deleteSeason(season.id)
                 }}
-                className="p-2 text-muted-foreground hover:text-red-500 transition-colors"
+                className="p-2 text-muted-foreground hover:text-white transition-colors"
                 title="Eliminar temporada"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
-              {expandedSeason === season.id ? (
+              {isExpanded ? (
                 <ChevronDown className="w-4 h-4 text-muted-foreground" />
               ) : (
                 <ChevronRight className="w-4 h-4 text-muted-foreground" />
@@ -205,7 +260,7 @@ export default function DashboardResearch() {
 
           {/* Chapters */}
           <AnimatePresence>
-            {expandedSeason === season.id && (
+            {isExpanded && (
               <motion.div
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: "auto", opacity: 1 }}
@@ -214,21 +269,26 @@ export default function DashboardResearch() {
                 className="border-t border-white/10 overflow-hidden"
               >
                 <div className="divide-y divide-white/5">
-                  {season.chapters.length === 0 && (
+                  {sortedChapters.length === 0 && (
                     <div className="p-6">
                       <p className="font-mono text-xs text-muted-foreground">
                         No hay capítulos en esta temporada. Agrega el primero.
                       </p>
                     </div>
                   )}
-                  {season.chapters.map((chapter) => (
-                    <div key={chapter.id}>
+                  {sortedChapters.map((chapter) => (
+                    <div
+                      key={chapter.id}
+                      className={`border-l-2 ${
+                        chapter.status === "published" ? "border-white/40" : "border-transparent"
+                      }`}
+                    >
                       {/* Chapter Row */}
                       <div
                         onClick={() =>
                           setExpandedChapter(expandedChapter === chapter.id ? null : chapter.id)
                         }
-                        className="flex items-center gap-4 p-4 pl-16 hover:bg-white/5 transition-colors cursor-pointer"
+                        className="flex items-center gap-4 p-4 pl-14 hover:bg-white/5 transition-colors cursor-pointer"
                       >
                         <button
                           onClick={(e) => {
@@ -240,7 +300,7 @@ export default function DashboardResearch() {
                           className="shrink-0"
                         >
                           {chapter.status === "published" ? (
-                            <CheckCircle className="w-4 h-4 text-emerald-500" />
+                            <CheckCircle className="w-4 h-4 text-white" />
                           ) : (
                             <Circle className="w-4 h-4 text-muted-foreground" />
                           )}
@@ -255,7 +315,7 @@ export default function DashboardResearch() {
                               e.stopPropagation()
                               handleEditChapter(season.id, chapter)
                             }}
-                            className="p-1.5 text-muted-foreground hover:text-cyan-500 transition-colors"
+                            className="p-1.5 text-muted-foreground hover:text-white transition-colors"
                           >
                             <Edit3 className="w-3.5 h-3.5" />
                           </button>
@@ -264,7 +324,7 @@ export default function DashboardResearch() {
                               e.stopPropagation()
                               deleteChapter(season.id, chapter.id)
                             }}
-                            className="p-1.5 text-muted-foreground hover:text-red-500 transition-colors"
+                            className="p-1.5 text-muted-foreground hover:text-white transition-colors"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -290,7 +350,7 @@ export default function DashboardResearch() {
                               <p className="font-mono text-xs text-muted-foreground italic leading-relaxed">
                                 {chapter.description}
                               </p>
-                              <div className="border-l-2 border-cyan-500/30 pl-4">
+                              <div className="border-l-2 border-white/30 pl-4">
                                 <p className="font-mono text-sm leading-relaxed whitespace-pre-line">
                                   {chapter.content}
                                 </p>
@@ -305,7 +365,7 @@ export default function DashboardResearch() {
                                     {chapter.resources.map((r, i) => (
                                       <li
                                         key={i}
-                                        className="flex items-center gap-2 font-mono text-xs text-cyan-500"
+                                        className="flex items-center gap-2 font-mono text-xs text-white"
                                       >
                                         <FileText className="w-3 h-3" />
                                         {r}
@@ -320,7 +380,7 @@ export default function DashboardResearch() {
                                   href={chapter.videoUrl}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-2 px-3 py-2 border border-cyan-500/30 text-cyan-500 font-mono text-xs hover:bg-cyan-500/10 transition-colors"
+                                  className="inline-flex items-center gap-2 px-3 py-2 border border-white/30 text-white font-mono text-xs hover:bg-white/10 transition-colors"
                                 >
                                   <Video className="w-4 h-4" />
                                   VER VIDEO
@@ -337,7 +397,8 @@ export default function DashboardResearch() {
             )}
           </AnimatePresence>
         </motion.div>
-      ))}
+        )
+      })}
 
       {/* Season Form Modal */}
       <AnimatePresence>
@@ -345,8 +406,9 @@ export default function DashboardResearch() {
           <SeasonFormModal
             form={seasonForm}
             onChange={setSeasonForm}
-            onSave={handleAddSeason}
+            onSave={handleSaveSeason}
             onClose={resetSeasonForm}
+            isEditing={editingSeasonId !== null}
           />
         )}
       </AnimatePresence>
@@ -375,11 +437,13 @@ function SeasonFormModal({
   onChange,
   onSave,
   onClose,
+  isEditing,
 }: {
-  form: { title: string; subtitle: string; description: string; order: number }
+  form: { title: string; subtitle: string; description: string; order: number; icon: ChartType }
   onChange: (f: typeof form) => void
   onSave: () => void
   onClose: () => void
+  isEditing: boolean
 }) {
   return (
     <motion.div
@@ -393,12 +457,12 @@ function SeasonFormModal({
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
-        className="bg-background border border-white/10 p-8 max-w-lg w-full mx-4"
+        className="bg-background border border-white/10 p-8 max-w-lg w-full mx-4 max-h-[85vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-6">
           <h3 className="font-sans text-2xl font-light">
-            Nueva <span className="italic text-cyan-500">Temporada</span>
+            {isEditing ? "Editar" : "Nueva"} <span className="italic text-white">Temporada</span>
           </h3>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
             <X className="w-4 h-4" />
@@ -416,14 +480,42 @@ function SeasonFormModal({
               onChange={(e) => onChange({ ...form, description: e.target.value })}
               rows={3}
               placeholder="Descripción de la temporada"
-              className="w-full bg-transparent border border-white/10 px-4 py-3 font-mono text-sm focus:border-cyan-500 focus:outline-none transition-colors resize-none"
+              className="w-full bg-transparent border border-white/10 px-4 py-3 font-mono text-sm focus:border-white focus:outline-none transition-colors resize-none"
             />
           </div>
           <InputField label="Orden" type="number" value={String(form.order)} onChange={(v) => onChange({ ...form, order: Number(v) })} />
+
+          <div>
+            <label className="font-mono text-[10px] text-muted-foreground tracking-wider uppercase block mb-1">
+              Ícono de la temporada
+            </label>
+            <div className="grid grid-cols-5 gap-2">
+              {chartTypes.map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => onChange({ ...form, icon: type })}
+                  title={type}
+                  className={`aspect-square flex items-center justify-center border p-1.5 transition-colors ${
+                    form.icon === type
+                      ? "border-white bg-white/10"
+                      : "border-white/10 hover:border-white/30"
+                  }`}
+                >
+                  <MiniChart
+                    type={type}
+                    size={32}
+                    active={form.icon === type}
+                    color={form.icon === type ? "#ffffff" : "rgba(255,255,255,0.45)"}
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
         <div className="flex gap-3 mt-8">
-          <button onClick={onSave} disabled={!form.title.trim()} className="flex-1 px-6 py-3 bg-cyan-500 text-black font-mono text-xs tracking-wider hover:bg-cyan-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-            CREAR TEMPORADA
+          <button onClick={onSave} disabled={!form.title.trim()} className="flex-1 px-6 py-3 bg-white text-black font-mono text-xs tracking-wider hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            {isEditing ? "GUARDAR CAMBIOS" : "CREAR TEMPORADA"}
           </button>
           <button onClick={onClose} className="px-6 py-3 border border-white/20 font-mono text-xs tracking-wider hover:border-white/50 transition-colors">
             CANCELAR
@@ -471,7 +563,7 @@ function ChapterFormModal({
         <div className="flex items-center justify-between mb-6">
           <h3 className="font-sans text-2xl font-light">
             {isEditing ? "Editar" : "Nuevo"}{" "}
-            <span className="italic text-cyan-500">Capítulo</span>
+            <span className="italic text-white">Capítulo</span>
           </h3>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
             <X className="w-4 h-4" />
@@ -488,7 +580,7 @@ function ChapterFormModal({
               value={form.description}
               onChange={(e) => onChange({ ...form, description: e.target.value })}
               placeholder="Breve descripción del capítulo"
-              className="w-full bg-transparent border border-white/10 px-4 py-3 font-mono text-sm focus:border-cyan-500 focus:outline-none transition-colors"
+              className="w-full bg-transparent border border-white/10 px-4 py-3 font-mono text-sm focus:border-white focus:outline-none transition-colors"
             />
           </div>
           <div>
@@ -500,7 +592,7 @@ function ChapterFormModal({
               onChange={(e) => onChange({ ...form, content: e.target.value })}
               rows={6}
               placeholder="Contenido académico del capítulo..."
-              className="w-full bg-transparent border border-white/10 px-4 py-3 font-mono text-sm focus:border-cyan-500 focus:outline-none transition-colors resize-none"
+              className="w-full bg-transparent border border-white/10 px-4 py-3 font-mono text-sm focus:border-white focus:outline-none transition-colors resize-none"
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -516,7 +608,7 @@ function ChapterFormModal({
                     onClick={() => onChange({ ...form, status: s })}
                     className={`flex-1 py-2 border font-mono text-[10px] tracking-wider transition-colors ${
                       form.status === s
-                        ? "border-cyan-500 text-cyan-500 bg-cyan-500/10"
+                        ? "border-white text-white bg-white/10"
                         : "border-white/10 text-muted-foreground"
                     }`}
                   >
@@ -533,9 +625,9 @@ function ChapterFormModal({
             </label>
             <div className="flex flex-wrap gap-1.5 mb-2">
               {form.resources.map((r, i) => (
-                <span key={i} className="flex items-center gap-1 px-2 py-0.5 bg-cyan-500/10 font-mono text-[10px] text-cyan-500">
+                <span key={i} className="flex items-center gap-1 px-2 py-0.5 bg-white/10 font-mono text-[10px] text-white">
                   {r}
-                  <button onClick={() => onChange({ ...form, resources: form.resources.filter((_, j) => j !== i) })} className="hover:text-red-400">
+                  <button onClick={() => onChange({ ...form, resources: form.resources.filter((_, j) => j !== i) })} className="hover:text-gray-300">
                     <X className="w-2.5 h-2.5" />
                   </button>
                 </span>
@@ -548,7 +640,7 @@ function ChapterFormModal({
                 onChange={(e) => onResourceInputChange(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); onAddResource() } }}
                 placeholder="Agregar recurso..."
-                className="flex-1 bg-transparent border border-white/10 px-3 py-2 font-mono text-xs focus:border-cyan-500 focus:outline-none transition-colors"
+                className="flex-1 bg-transparent border border-white/10 px-3 py-2 font-mono text-xs focus:border-white focus:outline-none transition-colors"
               />
               <button onClick={onAddResource} className="px-3 py-2 border border-white/10 font-mono text-[10px] hover:border-white/30">
                 +
@@ -557,7 +649,7 @@ function ChapterFormModal({
           </div>
         </div>
         <div className="flex gap-3 mt-8">
-          <button onClick={onSave} disabled={!form.title.trim()} className="flex-1 px-6 py-3 bg-cyan-500 text-black font-mono text-xs tracking-wider hover:bg-cyan-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+          <button onClick={onSave} disabled={!form.title.trim()} className="flex-1 px-6 py-3 bg-white text-black font-mono text-xs tracking-wider hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
             {isEditing ? "GUARDAR CAMBIOS" : "CREAR CAPÍTULO"}
           </button>
           <button onClick={onClose} className="px-6 py-3 border border-white/20 font-mono text-xs tracking-wider hover:border-white/50 transition-colors">
@@ -592,7 +684,7 @@ function InputField({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full bg-transparent border border-white/10 px-4 py-3 font-mono text-sm focus:border-cyan-500 focus:outline-none transition-colors"
+        className="w-full bg-transparent border border-white/10 px-4 py-3 font-mono text-sm focus:border-white focus:outline-none transition-colors"
       />
     </div>
   )

@@ -4,6 +4,7 @@ import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useDashboard, type Project } from "../../data/dashboard-store"
 import { Plus, ExternalLink, Trash2, X, Archive, Play, Pause } from "lucide-react"
+import MiniChart, { chartTypes, type ChartType } from "./mini-charts"
 
 const statusIcons = {
   active: Play,
@@ -12,10 +13,22 @@ const statusIcons = {
   archived: Archive,
 }
 const statusColors = {
-  active: "text-emerald-500 border-emerald-500/30",
-  paused: "text-amber-500 border-amber-500/30",
-  completed: "text-cyan-500 border-cyan-500/30",
+  active: "text-white border-white/30",
+  paused: "text-white border-white/30",
+  completed: "text-white border-white/30",
   archived: "text-muted-foreground border-white/10",
+}
+const statusGlow = {
+  active: "255,255,255",
+  paused: "180,180,180",
+  completed: "255,255,255",
+  archived: "110,110,110",
+}
+const statusLabels = {
+  active: "Activo",
+  paused: "Pausado",
+  completed: "Completado",
+  archived: "Archivado",
 }
 
 const emptyProject = {
@@ -24,6 +37,7 @@ const emptyProject = {
   status: "active" as const,
   tags: [] as string[],
   url: "",
+  icon: "bars" as ChartType,
 }
 
 export default function DashboardProjects() {
@@ -57,6 +71,7 @@ export default function DashboardProjects() {
       status: p.status,
       tags: [...p.tags],
       url: p.url ?? "",
+      icon: p.icon,
     })
     setEditingId(p.id)
     setShowForm(true)
@@ -79,7 +94,7 @@ export default function DashboardProjects() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-sans text-4xl font-light tracking-tight">
-            Gestión de <span className="italic text-cyan-500">Proyectos</span>
+            Gestión de <span className="italic text-white">Proyectos</span>
           </h1>
           <p className="font-mono text-xs text-muted-foreground mt-2 tracking-wider">
             {data.projects.length} proyectos registrados
@@ -90,7 +105,7 @@ export default function DashboardProjects() {
             resetForm()
             setShowForm(true)
           }}
-          className="flex items-center gap-2 px-4 py-2 bg-cyan-500 text-black font-mono text-xs tracking-wider hover:bg-cyan-400 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-white text-black font-mono text-xs tracking-wider hover:bg-gray-300 transition-colors"
         >
           <Plus className="w-3.5 h-3.5" />
           NUEVO PROYECTO
@@ -98,82 +113,16 @@ export default function DashboardProjects() {
       </div>
 
       {/* Project Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {data.projects.map((project, i) => {
-          const StatusIcon = statusIcons[project.status]
-          return (
-            <motion.div
-              key={project.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.06, duration: 0.3 }}
-              className="group border border-white/10 p-5 hover:border-white/20 transition-all"
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-sans text-lg font-light truncate">
-                    {project.name}
-                  </h3>
-                  <span
-                    className={`inline-flex items-center gap-1.5 px-2 py-0.5 border font-mono text-[9px] tracking-wider uppercase mt-2 ${
-                      statusColors[project.status]
-                    }`}
-                  >
-                    <StatusIcon className="w-2.5 h-2.5" />
-                    {project.status === "active"
-                      ? "Activo"
-                      : project.status === "paused"
-                        ? "Pausado"
-                        : project.status === "completed"
-                          ? "Completado"
-                          : "Archivado"}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={() => handleEdit(project)}
-                    className="p-1.5 text-muted-foreground hover:text-cyan-500 transition-colors"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                  </button>
-                  <button
-                    onClick={() => deleteProject(project.id)}
-                    className="p-1.5 text-muted-foreground hover:text-red-500 transition-colors"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-              <p className="font-mono text-xs text-muted-foreground mb-3 line-clamp-2">
-                {project.description}
-              </p>
-              <div className="flex items-center justify-between">
-                <div className="flex flex-wrap gap-1.5">
-                  {project.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="px-2 py-0.5 bg-white/5 font-mono text-[9px] text-muted-foreground tracking-wider"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-                {project.url && (
-                  <a
-                    href={project.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-muted-foreground hover:text-cyan-500 transition-colors"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
-                )}
-              </div>
-            </motion.div>
-          )
-        })}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+        {data.projects.map((project, i) => (
+          <ProjectCard
+            key={project.id}
+            project={project}
+            index={i}
+            onEdit={() => handleEdit(project)}
+            onDelete={() => deleteProject(project.id)}
+          />
+        ))}
       </div>
 
       {/* Form Modal */}
@@ -197,11 +146,11 @@ export default function DashboardProjects() {
                 <h3 className="font-sans text-2xl font-light">
                   {editingId ? (
                     <>
-                      Editar <span className="italic text-cyan-500">Proyecto</span>
+                      Editar <span className="italic text-white">Proyecto</span>
                     </>
                   ) : (
                     <>
-                      Nuevo <span className="italic text-cyan-500">Proyecto</span>
+                      Nuevo <span className="italic text-white">Proyecto</span>
                     </>
                   )}
                 </h3>
@@ -222,7 +171,7 @@ export default function DashboardProjects() {
                     onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
                     placeholder="Nombre del proyecto"
                     autoFocus
-                    className="w-full bg-transparent border border-white/10 px-4 py-3 font-mono text-sm focus:border-cyan-500 focus:outline-none transition-colors"
+                    className="w-full bg-transparent border border-white/10 px-4 py-3 font-mono text-sm focus:border-white focus:outline-none transition-colors"
                   />
                 </div>
 
@@ -235,7 +184,7 @@ export default function DashboardProjects() {
                     onChange={(e) => setForm({ ...form, description: e.target.value })}
                     rows={3}
                     placeholder="Descripción del proyecto"
-                    className="w-full bg-transparent border border-white/10 px-4 py-3 font-mono text-sm focus:border-cyan-500 focus:outline-none transition-colors resize-none"
+                    className="w-full bg-transparent border border-white/10 px-4 py-3 font-mono text-sm focus:border-white focus:outline-none transition-colors resize-none"
                   />
                 </div>
 
@@ -250,7 +199,7 @@ export default function DashboardProjects() {
                         onClick={() => setForm({ ...form, status: s })}
                         className={`px-3 py-2 border font-mono text-[10px] tracking-wider uppercase transition-colors ${
                           form.status === s
-                            ? "border-cyan-500 text-cyan-500 bg-cyan-500/10"
+                            ? "border-white text-white bg-white/10"
                             : "border-white/10 text-muted-foreground hover:border-white/30"
                         }`}
                       >
@@ -271,7 +220,7 @@ export default function DashboardProjects() {
                         className="flex items-center gap-1 px-2 py-0.5 bg-white/5 font-mono text-[10px] text-muted-foreground"
                       >
                         {tag}
-                        <button onClick={() => removeTag(tag)} className="hover:text-red-400">
+                        <button onClick={() => removeTag(tag)} className="hover:text-gray-300">
                           <X className="w-2.5 h-2.5" />
                         </button>
                       </span>
@@ -286,7 +235,7 @@ export default function DashboardProjects() {
                         if (e.key === "Enter") { e.preventDefault(); addTag() }
                       }}
                       placeholder="Agregar tag..."
-                      className="flex-1 bg-transparent border border-white/10 px-3 py-2 font-mono text-xs focus:border-cyan-500 focus:outline-none transition-colors"
+                      className="flex-1 bg-transparent border border-white/10 px-3 py-2 font-mono text-xs focus:border-white focus:outline-none transition-colors"
                     />
                     <button
                       onClick={addTag}
@@ -306,8 +255,36 @@ export default function DashboardProjects() {
                     value={form.url}
                     onChange={(e) => setForm({ ...form, url: e.target.value })}
                     placeholder="https://..."
-                    className="w-full bg-transparent border border-white/10 px-4 py-3 font-mono text-sm focus:border-cyan-500 focus:outline-none transition-colors"
+                    className="w-full bg-transparent border border-white/10 px-4 py-3 font-mono text-sm focus:border-white focus:outline-none transition-colors"
                   />
+                </div>
+
+                <div>
+                  <label className="font-mono text-[10px] text-muted-foreground tracking-wider uppercase block mb-1">
+                    Ícono animado
+                  </label>
+                  <div className="grid grid-cols-5 gap-2">
+                    {chartTypes.map((type) => (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => setForm({ ...form, icon: type })}
+                        title={type}
+                        className={`aspect-square flex items-center justify-center border p-1.5 transition-colors ${
+                          form.icon === type
+                            ? "border-white bg-white/10"
+                            : "border-white/10 hover:border-white/30"
+                        }`}
+                      >
+                        <MiniChart
+                          type={type}
+                          size={32}
+                          active={form.icon === type}
+                          color={form.icon === type ? "#ffffff" : "rgba(255,255,255,0.45)"}
+                        />
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 
@@ -315,7 +292,7 @@ export default function DashboardProjects() {
                 <button
                   onClick={handleSubmit}
                   disabled={!form.name.trim()}
-                  className="flex-1 px-6 py-3 bg-cyan-500 text-black font-mono text-xs tracking-wider hover:bg-cyan-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-6 py-3 bg-white text-black font-mono text-xs tracking-wider hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {editingId ? "GUARDAR CAMBIOS" : "CREAR PROYECTO"}
                 </button>
@@ -331,5 +308,127 @@ export default function DashboardProjects() {
         )}
       </AnimatePresence>
     </div>
+  )
+}
+
+function ProjectCard({
+  project,
+  index,
+  onEdit,
+  onDelete,
+}: {
+  project: Project
+  index: number
+  onEdit: () => void
+  onDelete: () => void
+}) {
+  const [hovered, setHovered] = useState(false)
+  const StatusIcon = statusIcons[project.status]
+  const glow = statusGlow[project.status]
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.06, duration: 0.3 }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className="relative h-64 overflow-hidden border border-white/10 hover:border-white/30 transition-colors"
+    >
+      {/* Default background: elegant grid pattern + status glow */}
+      <div className="absolute inset-0 bg-[#0a0a0a]">
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:28px_28px]" />
+        <div
+          className="absolute inset-0 transition-opacity duration-500"
+          style={{
+            background: `radial-gradient(circle at 50% 40%, rgba(${glow},${hovered ? 0.18 : 0.1}) 0%, transparent 70%)`,
+          }}
+        />
+      </div>
+
+      {/* Animated icon, always visible */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <MiniChart
+          type={project.icon}
+          size={110}
+          active={hovered}
+          color={hovered ? "#ffffff" : "rgba(255,255,255,0.35)"}
+        />
+      </div>
+
+      {/* Status badge, always visible */}
+      <span
+        className={`absolute top-3 left-3 inline-flex items-center gap-1.5 px-2 py-0.5 border font-mono text-[9px] tracking-wider uppercase bg-background/60 backdrop-blur-sm ${statusColors[project.status]}`}
+      >
+        <StatusIcon className="w-2.5 h-2.5" />
+        {statusLabels[project.status]}
+      </span>
+
+      {/* Name, always visible at bottom */}
+      <div className="absolute bottom-0 left-0 right-0 p-4 pointer-events-none">
+        <h3 className="font-sans text-lg font-light truncate">{project.name}</h3>
+      </div>
+
+      {/* Hover overlay: blur + full details */}
+      <AnimatePresence>
+        {hovered && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="absolute inset-0 bg-background/85 backdrop-blur-md p-5 flex flex-col"
+          >
+            <div className="flex items-start justify-between gap-2 mb-2">
+              <h3 className="font-sans text-lg font-light truncate">{project.name}</h3>
+              <div className="flex items-center gap-1 shrink-0">
+                <button
+                  onClick={onEdit}
+                  className="p-1.5 text-muted-foreground hover:text-white transition-colors"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </button>
+                <button
+                  onClick={onDelete}
+                  className="p-1.5 text-muted-foreground hover:text-white transition-colors"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+
+            <p className="font-mono text-xs text-muted-foreground line-clamp-4 flex-1">
+              {project.description || "Sin descripción."}
+            </p>
+
+            <div className="flex items-center justify-between gap-2 mt-3">
+              <div className="flex flex-wrap gap-1.5">
+                {project.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="px-2 py-0.5 bg-white/5 font-mono text-[9px] text-muted-foreground tracking-wider"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+              {project.url && (
+                <a
+                  href={project.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-muted-foreground hover:text-white transition-colors shrink-0"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   )
 }

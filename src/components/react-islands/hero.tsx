@@ -2,6 +2,7 @@
 
 import { useRef, useState, useEffect } from "react"
 import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion"
+import { Palette } from "lucide-react"
 import { SentientSphere } from "./sentient-sphere"
 import { DataParticles } from "./data-particles"
 import SocialLinks from "./social-links"
@@ -9,12 +10,13 @@ import SocialLinks from "./social-links"
 export default function Hero() {
   const containerRef = useRef<HTMLElement>(null)
   const controlRef = useRef<HTMLDivElement>(null)
+  const paletteButtonRef = useRef<HTMLButtonElement>(null)
   const [hoveredButton, setHoveredButton] = useState<string | null>(null)
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0)
   const [roleIndex, setRoleIndex] = useState(0)
   const [displayedText, setDisplayedText] = useState("")
   const [isTyping, setIsTyping] = useState(true)
-  const [sphereColor, setSphereColor] = useState("#7dd3fc")
+  const [sphereColor, setSphereColor] = useState("#ffffff")
   const [controlVisible, setControlVisible] = useState(false)
   const [photoHovered, setPhotoHovered] = useState(false)
 
@@ -27,30 +29,18 @@ export default function Hero() {
   const activeColor = hoveredButton ? buttonColors[hoveredButton] : sphereColor
 
   useEffect(() => {
-    const el = controlRef.current
-    if (!el) return
-    let hideTimer: ReturnType<typeof setTimeout>
+    if (!controlVisible) return
 
-    const onMove = (e: MouseEvent) => {
-      const rect = el.getBoundingClientRect()
-      const cx = rect.left + rect.width / 2
-      const cy = rect.top + rect.height / 2
-      const dist = Math.hypot(e.clientX - cx, e.clientY - cy)
-      const threshold = Math.max(rect.width, rect.height) / 2 + 150
-      if (dist < threshold) {
-        setControlVisible(true)
-        clearTimeout(hideTimer)
-      } else {
-        hideTimer = setTimeout(() => setControlVisible(false), 200)
-      }
+    const onClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node
+      if (controlRef.current?.contains(target)) return
+      if (paletteButtonRef.current?.contains(target)) return
+      setControlVisible(false)
     }
 
-    window.addEventListener("mousemove", onMove, { passive: true })
-    return () => {
-      window.removeEventListener("mousemove", onMove)
-      clearTimeout(hideTimer)
-    }
-  }, [])
+    window.addEventListener("mousedown", onClickOutside)
+    return () => window.removeEventListener("mousedown", onClickOutside)
+  }, [controlVisible])
 
   useEffect(() => {
     document.documentElement.style.setProperty("--cursor-color", activeColor)
@@ -162,12 +152,25 @@ export default function Hero() {
         <SentientSphere accentColor={activeColor} />
       </div>
 
+      {/* ── Palette toggle button ── */}
+      <button
+        ref={paletteButtonRef}
+        type="button"
+        onClick={() => setControlVisible((v) => !v)}
+        aria-label="Mostrar/ocultar paleta de colores"
+        aria-pressed={controlVisible}
+        className="absolute bottom-8 right-8 z-50 flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-black/70 backdrop-blur-xl shadow-2xl shadow-black/60 transition-colors hover:border-white/30"
+      >
+        <Palette className="h-5 w-5" style={{ color: controlVisible ? activeColor : "rgba(255,255,255,0.7)" }} />
+      </button>
+
       {/* ── Color control for 3D sphere & text ── */}
       <motion.div
         ref={controlRef}
+        initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: controlVisible ? 1 : 0, y: controlVisible ? 0 : 16 }}
         transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
-        className="absolute bottom-8 right-8 z-50 pointer-events-none"
+        className="absolute bottom-20 right-8 z-50 pointer-events-none"
         style={{ pointerEvents: controlVisible ? "auto" : "none" as const }}
       >
         <div className="rounded-lg border border-white/10 bg-black/70 backdrop-blur-xl p-4 shadow-2xl shadow-black/60">
@@ -250,8 +253,10 @@ export default function Hero() {
                     className="object-cover object-top w-full h-full transition-[filter] duration-500"
                     style={{
                       filter: photoHovered
-                        ? `grayscale(0) drop-shadow(0 0 8px ${activeColor}) drop-shadow(0 0 20px ${activeColor})`
+                        ? `grayscale(0) drop-shadow(0 0 2px ${activeColor})`
                         : "grayscale(1)",
+                      maskImage: "linear-gradient(to bottom, black 70%, transparent 100%)",
+                      WebkitMaskImage: "linear-gradient(to bottom, black 70%, transparent 100%)",
                     }}
                     loading="eager"
                     onMouseEnter={() => setPhotoHovered(true)}

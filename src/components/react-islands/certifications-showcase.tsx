@@ -17,7 +17,7 @@ type CredentialItem = {
 
 const tabItems: { id: CredentialCategory; label: string; count: number }[] = [
   { id: "diplomas", label: "Diplomas", count: 1 },
-  { id: "certificaciones", label: "Certificaciones", count: 9 },
+  { id: "certificaciones", label: "Certificaciones", count: 8 },
   { id: "experiencia", label: "Experiencias", count: 1 },
   { id: "ponencias", label: "Ponencias", count: 4 },
 ]
@@ -88,15 +88,6 @@ const contentByTab: Record<CredentialCategory, CredentialItem[]> = {
       description:
         "Uso estratégico de fuentes administrativas para analítica pública y planeación basada en evidencia.",
       image: "/certificaciones/dane-registros-administrativos.png",
-    },
-    {
-      title: "SENA: Calidad Física del Café",
-      shortTitle: "SENA Café",
-      meta: "Formación técnica",
-      year: "2021",
-      description:
-        "Evaluación sensorial y parámetros de calidad física para análisis de productos agroindustriales.",
-      image: "/certificaciones/sena-calidad-fisica-cafe.png",
     },
     {
       title: "SENA: SIG y Catastro",
@@ -246,10 +237,9 @@ export default function CertificationsShowcase() {
         className="relative z-10 mx-auto flex max-w-7xl flex-col"
       >
         <div className="mb-10 md:mb-14 md:mt-12">
-          <p className="font-mono text-[11px] tracking-[0.3em] text-white/30 mb-3">02 — CREDENCIALES</p>
           <h2 className="font-sans text-3xl md:text-5xl font-light italic text-white">
             Formación{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-cyan-600">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-white/60">
               y Trayectoria
             </span>
           </h2>
@@ -267,21 +257,21 @@ export default function CertificationsShowcase() {
                 onClick={() => handleTabChange(tab.id)}
                 className={`relative flex-1 min-w-[calc(50%-2px)] md:min-w-0 border border-white/10 md:border-r md:border-0 md:last:border-r-0 px-4 py-3 md:py-4 font-mono text-[10px] tracking-[0.16em] transition-all duration-300 ${
                   activeTab === tab.id
-                    ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/30 md:border-transparent"
+                    ? "bg-white/10 text-white border-white/30 md:border-transparent"
                     : "text-white/40 hover:bg-white/5 hover:text-white/70 border-white/10"
                 }`}
               >
                 {activeTab === tab.id && (
                   <motion.div
                     layoutId="tab-indicator"
-                    className="absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r from-cyan-400 to-cyan-600"
+                    className="absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r from-white to-white/60"
                     transition={{ type: "spring", stiffness: 400, damping: 30 }}
                   />
                 )}
                 <span className="block">{tab.label.toUpperCase()}</span>
                 <span
                   className={`mt-0.5 block text-[9px] tracking-widest ${
-                    activeTab === tab.id ? "text-cyan-500/70" : "text-white/20"
+                    activeTab === tab.id ? "text-white/70" : "text-white/20"
                   }`}
                 >
                   {String(tab.count).padStart(2, "0")} ITEMS
@@ -313,7 +303,7 @@ export default function CertificationsShowcase() {
                       onMouseEnter={() => { if (!isSingleItemTab) setSelectedIndex(index) }}
                       className={`group relative flex flex-col overflow-hidden border text-left transition-all duration-200 ${
                         isActive
-                          ? "border-cyan-500 bg-cyan-500/10"
+                          ? "border-white bg-white/10"
                           : "border-white/10 bg-white/5 hover:border-white/30"
                       }`}
                     >
@@ -328,14 +318,14 @@ export default function CertificationsShowcase() {
                         <p className="font-mono text-[9px] font-semibold tracking-wider text-white/70 transition-colors duration-200 group-hover:text-white/90 truncate">
                           {item.shortTitle.toUpperCase()}
                         </p>
-                        <span className="shrink-0 font-mono text-[8px] tracking-widest text-white/20 group-hover:text-cyan-500/60 transition-colors duration-200">
+                        <span className="shrink-0 font-mono text-[8px] tracking-widest text-white/20 group-hover:text-white/60 transition-colors duration-200">
                           {item.year}
                         </span>
                       </div>
                       {isActive && (
                         <motion.div
                           layoutId="card-active-line"
-                          className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-cyan-400 to-cyan-600"
+                          className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-white to-white/60"
                           transition={{ type: "spring", stiffness: 400, damping: 30 }}
                         />
                       )}
@@ -365,7 +355,7 @@ export default function CertificationsShowcase() {
                           </span>
                           <span className="h-px flex-1 bg-white/8" />
                         </div>
-                        <span className="inline-flex w-fit border border-cyan-500/20 bg-cyan-500/8 px-2.5 py-1 font-mono text-[9px] tracking-[0.2em] text-cyan-400/80">
+                        <span className="inline-flex w-fit border border-white/20 bg-white/8 px-2.5 py-1 font-mono text-[9px] tracking-[0.2em] text-white/80">
                           {infoItem.meta.toUpperCase()}
                         </span>
                         <span className="font-mono text-[11px] tracking-widest text-white/20">{infoItem.year}</span>
@@ -387,7 +377,7 @@ export default function CertificationsShowcase() {
                           type="button"
                           onClick={goToPrev}
                           disabled={isSingleItemTab}
-                          className="flex h-8 w-8 items-center justify-center border border-white/10 text-white/30 transition-all duration-200 hover:border-cyan-500/50 hover:text-cyan-400 disabled:opacity-20 disabled:cursor-not-allowed"
+                          className="flex h-8 w-8 items-center justify-center border border-white/10 text-white/30 transition-all duration-200 hover:border-white/50 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed"
                           aria-label="Anterior"
                         >
                           <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M7 2L4 6l3 4"/></svg>
@@ -396,7 +386,7 @@ export default function CertificationsShowcase() {
                           type="button"
                           onClick={goToNext}
                           disabled={isSingleItemTab}
-                          className="flex h-8 w-8 items-center justify-center border border-white/10 text-white/30 transition-all duration-200 hover:border-cyan-500/50 hover:text-cyan-400 disabled:opacity-20 disabled:cursor-not-allowed"
+                          className="flex h-8 w-8 items-center justify-center border border-white/10 text-white/30 transition-all duration-200 hover:border-white/50 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed"
                           aria-label="Siguiente"
                         >
                           <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M5 2l3 4-3 4"/></svg>
@@ -431,7 +421,7 @@ export default function CertificationsShowcase() {
               </div>
 
               <div className="flex items-center justify-between border border-t-0 border-white/10 px-5 py-2.5">
-                <p className="font-mono text-[9px] tracking-[0.22em] text-cyan-500/40">
+                <p className="font-mono text-[9px] tracking-[0.22em] text-white/40">
                   {tabItems.find((t) => t.id === activeTab)?.label.toUpperCase()}
                   {infoItem
                     ? ` / ${String((infoIndex ?? 0) + 1).padStart(2, "0")} — ${infoItem.shortTitle.toUpperCase()}`
@@ -462,7 +452,7 @@ export default function CertificationsShowcase() {
               <button
                 type="button"
                 onClick={closeCarousel}
-                className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center border border-white/10 text-white/40 transition-all duration-200 hover:border-cyan-500/50 hover:text-cyan-400"
+                className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center border border-white/10 text-white/40 transition-all duration-200 hover:border-white/50 hover:text-white"
                 aria-label="Cerrar"
               >
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -504,7 +494,7 @@ export default function CertificationsShowcase() {
                   className="flex flex-col items-center gap-2 text-center max-w-2xl"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="inline-flex border border-cyan-500/20 bg-cyan-500/8 px-2.5 py-1 font-mono text-[9px] tracking-[0.2em] text-cyan-400/80">
+                    <span className="inline-flex border border-white/20 bg-white/8 px-2.5 py-1 font-mono text-[9px] tracking-[0.2em] text-white/80">
                       {activeItems[carouselIndex].meta.toUpperCase()}
                     </span>
                     <span className="font-mono text-[10px] tracking-widest text-white/20">{activeItems[carouselIndex].year}</span>
@@ -524,7 +514,7 @@ export default function CertificationsShowcase() {
                   type="button"
                   onClick={goToCarouselPrev}
                   disabled={activeItems.length <= 1}
-                  className="flex h-10 w-10 items-center justify-center border border-white/10 text-white/40 transition-all duration-200 hover:border-cyan-500/50 hover:text-cyan-400 disabled:opacity-20 disabled:cursor-not-allowed"
+                  className="flex h-10 w-10 items-center justify-center border border-white/10 text-white/40 transition-all duration-200 hover:border-white/50 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed"
                   aria-label="Anterior"
                 >
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M9 3L5 7l4 4"/></svg>
@@ -534,7 +524,7 @@ export default function CertificationsShowcase() {
                   type="button"
                   onClick={goToCarouselNext}
                   disabled={activeItems.length <= 1}
-                  className="flex h-10 w-10 items-center justify-center border border-white/10 text-white/40 transition-all duration-200 hover:border-cyan-500/50 hover:text-cyan-400 disabled:opacity-20 disabled:cursor-not-allowed"
+                  className="flex h-10 w-10 items-center justify-center border border-white/10 text-white/40 transition-all duration-200 hover:border-white/50 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed"
                   aria-label="Siguiente"
                 >
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M5 3l4 4-4 4"/></svg>

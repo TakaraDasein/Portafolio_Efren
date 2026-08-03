@@ -2,70 +2,9 @@
 
 import { motion } from "framer-motion"
 import { useState, useRef } from "react"
-import ProjectsShowcase from "./projects-showcase"
 import NeuralBackground from "./neural-background"
 import { Code2, BrainCircuit, Zap, Database, GitBranch, TrendingUp } from "lucide-react"
 import SocialLinks from "./social-links"
-
-const mlProjects = [
-  {
-    id: "1",
-    title: "Predicción de Deserción Estudiantil",
-    description: "Modelo de clasificación usando Random Forest y XGBoost para predecir riesgo de deserción universitaria, integrando variables académicas, socioeconómicas y comportamentales con 89% de precisión",
-    tags: ["Classification", "Random Forest", "Python", "Scikit-learn"],
-    featured: true,
-    thumbnail: "/sound-wave-visualization-dark-theme.jpg",
-    type: "jupyter" as const,
-    externalLink: "#"
-  },
-  {
-    id: "2",
-    title: "Sistema de Recomendación NLP",
-    description: "Motor de recomendaciones basado en procesamiento de lenguaje natural y análisis de sentimientos para personalización de contenido educativo usando embeddings y transformers",
-    tags: ["NLP", "Transformers", "Sentiment Analysis", "TensorFlow"],
-    thumbnail: "/sound-wave-visualization-dark-theme.jpg",
-    type: "github" as const,
-    externalLink: "#"
-  },
-  {
-    id: "3",
-    title: "Clustering de Perfiles de Usuario",
-    description: "Segmentación automática de usuarios mediante K-Means y DBSCAN para identificar patrones de comportamiento y optimizar estrategias de marketing dirigido",
-    tags: ["Clustering", "K-Means", "Unsupervised Learning", "Python"],
-    featured: true,
-    thumbnail: "/sound-wave-visualization-dark-theme.jpg",
-    type: "jupyter" as const,
-    externalLink: "#"
-  },
-  {
-    id: "4",
-    title: "Detección de Anomalías en Series Temporales",
-    description: "Implementación de autoencoders y LSTM para identificación de patrones anómalos en datos de sensores IoT con aplicación en mantenimiento predictivo",
-    tags: ["Deep Learning", "LSTM", "Anomaly Detection", "Keras"],
-    thumbnail: "/sound-wave-visualization-dark-theme.jpg",
-    type: "jupyter" as const,
-    externalLink: "#"
-  },
-  {
-    id: "5",
-    title: "Clasificación de Imágenes CNN",
-    description: "Red neuronal convolucional para clasificación multiclase de imágenes médicas usando transfer learning con ResNet50, alcanzando 92% de accuracy en validación",
-    tags: ["CNN", "Transfer Learning", "Computer Vision", "PyTorch"],
-    thumbnail: "/sound-wave-visualization-dark-theme.jpg",
-    type: "github" as const,
-    externalLink: "#"
-  },
-  {
-    id: "6",
-    title: "Chatbot Conversacional con LLMs",
-    description: "Asistente virtual desarrollado con LangChain y modelos de lenguaje para atención al cliente automatizada, integrando RAG para consultas específicas del dominio",
-    tags: ["LLMs", "LangChain", "NLP", "RAG"],
-    featured: true,
-    thumbnail: "/sound-wave-visualization-dark-theme.jpg",
-    type: "demo" as const,
-    externalLink: "#"
-  },
-]
 
 const expertise = [
   { 
@@ -206,7 +145,7 @@ export default function MachineLearningContent() {
         </a>
       </section>
 
-      {/* Expertise Grid */}
+      {/* Expertise, Stack & Pipeline — consolidated into a single section */}
       <section className="py-24 px-8 md:px-12 border-b border-white/10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -214,12 +153,13 @@ export default function MachineLearningContent() {
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
         >
-          <p className="font-mono text-xs tracking-[0.3em] text-muted-foreground mb-4">03 • ÁREAS DE EXPERTISE</p>
+          <p className="font-mono text-xs tracking-[0.3em] text-muted-foreground mb-4">03 • EXPERTISE & METODOLOGÍA</p>
           <h2 className="font-sans text-3xl md:text-5xl font-light mb-16">
-            Modelos y <span className="italic text-[#ef4444]">Algoritmos</span>
+            Modelos, <span className="italic text-[#ef4444]">Stack</span> y Pipeline
           </h2>
 
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {/* Expertise Grid */}
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-16">
             {expertise.map((area, index) => {
               const Icon = area.icon
               return (
@@ -239,7 +179,7 @@ export default function MachineLearningContent() {
                   <div className="mb-6">
                     <Icon className="w-10 h-10 transition-colors" style={{ color: area.color }} />
                   </div>
-                  
+
                   <h3 className="font-sans text-xl font-light mb-4 transition-colors" style={{ color: area.color }}>
                     {area.category}
                   </h3>
@@ -255,23 +195,10 @@ export default function MachineLearningContent() {
               )
             })}
           </div>
-        </motion.div>
-      </section>
 
-      {/* Frameworks */}
-      <section className="py-24 px-8 md:px-12 border-b border-white/10">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-        >
-          <p className="font-mono text-xs tracking-[0.3em] text-muted-foreground mb-4">04 • STACK TECNOLÓGICO</p>
-          <h2 className="font-sans text-3xl md:text-5xl font-light mb-16">
-            Frameworks y <span className="italic text-[#ef4444]">Librerías</span>
-          </h2>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          {/* Frameworks — compact chip row */}
+          <p className="font-mono text-xs tracking-[0.3em] text-muted-foreground mb-6">STACK TECNOLÓGICO</p>
+          <div className="flex flex-wrap gap-3 mb-16">
             {frameworks.map((framework, index) => (
               <motion.div
                 key={framework.name}
@@ -279,68 +206,45 @@ export default function MachineLearningContent() {
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.05, duration: 0.4 }}
-                className="group border border-white/10 p-6 hover:border-white/50 transition-all duration-300 text-center"
+                className="group border border-white/10 px-4 py-2 hover:border-white/50 transition-all duration-300"
                 style={{
                   borderColor: `${framework.color}40`
                 }}
                 onMouseEnter={(e) => e.currentTarget.style.borderColor = framework.color}
                 onMouseLeave={(e) => e.currentTarget.style.borderColor = `${framework.color}40`}
               >
-                <p className="font-mono text-xs tracking-wider mb-2 transition-colors" style={{ color: framework.color }}>
+                <span className="font-mono text-xs tracking-wider transition-colors" style={{ color: framework.color }}>
                   {framework.name}
-                </p>
-                <p className="font-mono text-[10px] text-muted-foreground">
+                </span>
+                <span className="font-mono text-[10px] text-muted-foreground ml-2">
                   {framework.stack}
-                </p>
+                </span>
               </motion.div>
             ))}
           </div>
-        </motion.div>
-      </section>
 
-      {/* ML Pipeline */}
-      <section className="py-24 px-8 md:px-12 border-b border-white/10">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-        >
-          <p className="font-mono text-xs tracking-[0.3em] text-muted-foreground mb-4">05 • METODOLOGÍA</p>
-          <h2 className="font-sans text-3xl md:text-5xl font-light mb-16">
-            Pipeline de <span className="italic text-[#ef4444]">Desarrollo</span>
-          </h2>
-
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+          {/* ML Pipeline — compact horizontal steps */}
+          <p className="font-mono text-xs tracking-[0.3em] text-muted-foreground mb-6">PIPELINE DE DESARROLLO</p>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {pipeline.map((phase, index) => {
               const Icon = phase.icon
               return (
                 <motion.div
                   key={phase.step}
-                  initial={{ opacity: 0, y: 30 }}
+                  initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: index * 0.15, duration: 0.6 }}
-                  className="relative"
+                  transition={{ delay: index * 0.1, duration: 0.5 }}
+                  className="flex items-start gap-3 border border-white/10 p-4 hover:border-[#ef4444]/50 transition-all duration-300"
                 >
-                  {/* Step Number */}
-                  <div className="absolute -top-3 -left-3 w-12 h-12 border-2 border-[#ef4444] bg-[#0a0a0a] flex items-center justify-center">
-                    <span className="font-mono text-xs font-bold text-[#ef4444]">{phase.step}</span>
-                  </div>
-
-                  {/* Card */}
-                  <div className="border border-white/10 p-6 pt-10 h-full hover:border-[#ef4444]/50 transition-all duration-300">
-                    <Icon className="w-8 h-8 text-[#ef4444] mb-4" />
-                    <h3 className="font-sans text-lg font-light mb-3">{phase.title}</h3>
-                    <p className="font-mono text-xs text-muted-foreground leading-relaxed">
+                  <Icon className="w-5 h-5 text-[#ef4444] flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-mono text-[10px] tracking-wider text-[#ef4444] mb-1">{phase.step}</p>
+                    <h3 className="font-sans text-sm font-light mb-1">{phase.title}</h3>
+                    <p className="font-mono text-[11px] text-muted-foreground leading-relaxed">
                       {phase.description}
                     </p>
                   </div>
-
-                  {/* Connecting Line (except last) */}
-                  {index < pipeline.length - 1 && (
-                    <div className="hidden lg:block absolute top-1/2 -right-4 w-8 h-0.5 bg-gradient-to-r from-[#ef4444] to-transparent" />
-                  )}
                 </motion.div>
               )
             })}
@@ -348,14 +252,30 @@ export default function MachineLearningContent() {
         </motion.div>
       </section>
 
-      {/* Projects Showcase */}
-      <ProjectsShowcase 
-        projects={mlProjects}
-        title="Proyectos de"
-        subtitle="ML & IA"
-        sectionNumber="06 • PORTAFOLIO ML"
-        accentColor="#ef4444"
-      />
+      {/* Projects — coming soon */}
+      <section className="py-24 px-8 md:px-12 border-b border-white/10">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+        >
+          <p className="font-mono text-xs tracking-[0.3em] text-muted-foreground mb-4">04 • PORTAFOLIO ML</p>
+          <h2 className="font-sans text-3xl md:text-5xl font-light mb-16">
+            Proyectos de <span className="italic text-[#ef4444]">ML & IA</span>
+          </h2>
+
+          <div className="border border-dashed border-white/20 p-12 md:p-16 text-center">
+            <BrainCircuit className="w-10 h-10 text-[#ef4444] mx-auto mb-6" />
+            <h3 className="font-sans text-xl md:text-2xl font-light mb-3">
+              Proyectos <span className="italic text-[#ef4444]">próximamente</span>
+            </h3>
+            <p className="font-mono text-xs text-muted-foreground max-w-md mx-auto">
+              Esta sección se actualizará pronto con casos de estudio y modelos desarrollados.
+            </p>
+          </div>
+        </motion.div>
+      </section>
 
       {/* CTA Section */}
       <section className="py-24 px-8 md:px-12 text-center">
