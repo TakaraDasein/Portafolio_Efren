@@ -21,6 +21,14 @@ export interface VaultSecretMasked {
 
 const VAULT_PATHNAME = "vault/secrets.json.enc"
 
+// The Vercel Blob store for this project was connected with the custom prefix
+// "BLOB_READ_WRITE_TOKEN", so Vercel actually named the token env var
+// "BLOB_READ_WRITE_TOKEN_READ_WRITE_TOKEN" (prefix + "_READ_WRITE_TOKEN"), not the
+// plain "BLOB_READ_WRITE_TOKEN" that @vercel/blob looks for automatically.
+function getBlobToken(): string | undefined {
+  return process.env.BLOB_READ_WRITE_TOKEN ?? process.env.BLOB_READ_WRITE_TOKEN_READ_WRITE_TOKEN
+}
+
 export function maskValue(value: string): string {
   if (value.length <= 4) return "•".repeat(value.length)
   return `${"•".repeat(Math.max(4, value.length - 4))}${value.slice(-4)}`
@@ -28,7 +36,7 @@ export function maskValue(value: string): string {
 
 async function readEncryptedBlob(): Promise<string | null> {
   try {
-    const result = await get(VAULT_PATHNAME, { access: "private", useCache: false })
+    const result = await get(VAULT_PATHNAME, { access: "private", useCache: false, token: getBlobToken() })
     if (!result || !result.stream) return null
     return await new Response(result.stream).text()
   } catch {
@@ -53,6 +61,7 @@ async function saveVault(secrets: VaultSecret[]): Promise<void> {
     addRandomSuffix: false,
     allowOverwrite: true,
     contentType: "text/plain",
+    token: getBlobToken(),
   })
 }
 
