@@ -3,39 +3,50 @@
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useDashboard, type Project } from "../../data/dashboard-store"
-import { Plus, ExternalLink, Trash2, X, Archive, Play, Pause } from "lucide-react"
+import { Plus, ExternalLink, Trash2, X, Archive, Search, Code2, Wrench, CheckCircle2 } from "lucide-react"
 import MiniChart, { chartTypes, type ChartType } from "./mini-charts"
 
 const statusIcons = {
-  active: Play,
-  paused: Pause,
-  completed: Archive,
+  planning: Search,
+  development: Code2,
+  maintenance: Wrench,
+  completed: CheckCircle2,
   archived: Archive,
 }
 const statusColors = {
-  active: "text-white border-white/30",
-  paused: "text-white border-white/30",
+  planning: "text-red-400 border-red-400/40",
+  development: "text-green-400 border-green-400/40",
+  maintenance: "text-yellow-400 border-yellow-400/40",
   completed: "text-white border-white/30",
   archived: "text-muted-foreground border-white/10",
 }
 const statusGlow = {
-  active: "255,255,255",
-  paused: "180,180,180",
+  planning: "239,68,68",
+  development: "34,197,94",
+  maintenance: "234,179,8",
   completed: "255,255,255",
   archived: "110,110,110",
 }
 const statusLabels = {
-  active: "Activo",
-  paused: "Pausado",
+  planning: "Planeación",
+  development: "Desarrollo",
+  maintenance: "Mantenimiento",
   completed: "Completado",
   archived: "Archivado",
 }
+const statusSelectedClasses = {
+  planning: "border-red-400 text-red-400 bg-red-400/10",
+  development: "border-green-400 text-green-400 bg-green-400/10",
+  maintenance: "border-yellow-400 text-yellow-400 bg-yellow-400/10",
+  completed: "border-white text-white bg-white/10",
+  archived: "border-white/40 text-muted-foreground bg-white/5",
+}
 
-const emptyProject = {
+const emptyProject: Omit<Project, "id" | "createdAt" | "updatedAt"> = {
   name: "",
   description: "",
-  status: "active" as const,
-  tags: [] as string[],
+  status: "planning",
+  tags: [],
   url: "",
   icon: "bars" as ChartType,
 }
@@ -192,18 +203,18 @@ export default function DashboardProjects() {
                   <label className="font-mono text-[10px] text-muted-foreground tracking-wider uppercase block mb-1">
                     Estado
                   </label>
-                  <div className="flex gap-2">
-                    {(["active", "paused", "completed", "archived"] as const).map((s) => (
+                  <div className="flex flex-wrap gap-2">
+                    {(["planning", "development", "maintenance", "completed", "archived"] as const).map((s) => (
                       <button
                         key={s}
                         onClick={() => setForm({ ...form, status: s })}
                         className={`px-3 py-2 border font-mono text-[10px] tracking-wider uppercase transition-colors ${
                           form.status === s
-                            ? "border-white text-white bg-white/10"
+                            ? statusSelectedClasses[s]
                             : "border-white/10 text-muted-foreground hover:border-white/30"
                         }`}
                       >
-                        {s === "active" ? "Activo" : s === "paused" ? "Pausado" : s === "completed" ? "Completado" : "Archivado"}
+                        {statusLabels[s]}
                       </button>
                     ))}
                   </div>
@@ -333,7 +344,8 @@ function ProjectCard({
       transition={{ delay: index * 0.06, duration: 0.3 }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="relative h-64 overflow-hidden border border-white/10 hover:border-white/30 transition-colors"
+      className="relative h-64 overflow-hidden border transition-colors"
+      style={{ borderColor: `rgba(${glow},${hovered ? 0.55 : 0.3})` }}
     >
       {/* Default background: elegant grid pattern + status glow */}
       <div className="absolute inset-0 bg-[#0a0a0a]">

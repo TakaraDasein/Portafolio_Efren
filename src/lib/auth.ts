@@ -44,3 +44,7 @@ export function checkPassword(password: string): boolean {
   }
   return safeEqual(password, expected)
 }
+
+export function requireSession(cookies: { get: (name: string) => { value: string } | undefined }): boolean {
+  return isValidSessionToken(cookies.get(SESSION_COOKIE_NAME)?.value)
+}

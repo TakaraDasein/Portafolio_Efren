@@ -1,32 +1,104 @@
 "use client"
 
+import { useMemo } from "react"
 import { useDashboard } from "../../data/dashboard-store"
 import { motion } from "framer-motion"
+import { SentientFigure } from "./sentient-figure"
 import {
   FolderKanban,
   Repeat,
   Heart,
   BookOpen,
   Calendar,
-  TrendingUp,
   Target,
   Zap,
   Activity,
+  type LucideIcon,
 } from "lucide-react"
+
+function seededSeries(seed: string, points = 7): number[] {
+  let s = 0
+  for (let i = 0; i < seed.length; i++) s = (s * 31 + seed.charCodeAt(i)) >>> 0
+  const next = () => {
+    s = (s * 1664525 + 1013904223) >>> 0
+    return s / 4294967295
+  }
+  return Array.from({ length: points }, () => 0.2 + next() * 0.8)
+}
+
+function Sparkline({ values }: { values: number[] }) {
+  const w = 44
+  const h = 14
+  const max = Math.max(...values)
+  const min = Math.min(...values)
+  const points = values
+    .map((v, i) => {
+      const x = (i / (values.length - 1)) * w
+      const y = h - ((v - min) / (max - min || 1)) * h
+      return `${x},${y}`
+    })
+    .join(" ")
+  return (
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} className="overflow-visible shrink-0">
+      <polyline
+        points={points}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        opacity="0.55"
+      />
+    </svg>
+  )
+}
+
+function SideStat({
+  label,
+  value,
+  icon: Icon,
+  index,
+}: {
+  label: string
+  value: number
+  icon: LucideIcon
+  index: number
+}) {
+  const spark = useMemo(() => seededSeries(label), [label])
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 16 }}
+      animate={{ opacity: 1, x: 0, y: [0, -4, 0] }}
+      transition={{
+        opacity: { delay: 0.15 + index * 0.08, duration: 0.4 },
+        x: { delay: 0.15 + index * 0.08, duration: 0.4 },
+        y: { duration: 4 + index * 0.4, repeat: Infinity, ease: "easeInOut", delay: index * 0.3 },
+      }}
+      className="flex items-center gap-3 px-4 py-2.5 bg-background/70 backdrop-blur-md border border-white/10 rounded-xl hover:border-white/30 transition-colors"
+    >
+      <div className="flex flex-col items-center gap-1 shrink-0 w-12">
+        <Icon className="w-4 h-4 text-white" />
+        <span className="font-mono text-[8px] text-muted-foreground/60 tracking-wider uppercase text-center leading-tight">
+          {label}
+        </span>
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="font-sans text-lg font-light tracking-tight">{value}</span>
+        <Sparkline values={spark} />
+      </div>
+    </motion.div>
+  )
+}
 
 export default function DashboardHome() {
   const { data } = useDashboard()
   const { projects, routines, healthMetrics, researchSeasons, calendarEvents } = data
 
-  const activeProjects = projects.filter((p) => p.status === "active").length
+  const activeProjects = projects.filter((p) => p.status === "development").length
   const activeRoutines = routines.filter((r) => !r.paused)
   const completedToday = activeRoutines.filter(
     (r) => r.lastCompleted === new Date().toISOString().split("T")[0],
   ).length
-  const totalChapters = researchSeasons.reduce(
-    (acc, s) => acc + s.chapters.length,
-    0,
-  )
   const publishedChapters = researchSeasons.reduce(
     (acc, s) => acc + s.chapters.filter((c) => c.status === "published").length,
     0,
@@ -35,94 +107,30 @@ export default function DashboardHome() {
     (e) => e.day === new Date().getDay(),
   ).length
 
-  const stats = [
-    {
-      label: "Proyectos Activos",
-      value: activeProjects,
-      total: projects.length,
-      icon: FolderKanban,
-      color: "text-white",
-      bg: "bg-white/10",
-    },
-    {
-      label: "Rutinas Hoy",
-      value: completedToday,
-      total: activeRoutines.length,
-      icon: Repeat,
-      color: "text-white",
-      bg: "bg-white/10",
-    },
-    {
-      label: "Registros Salud",
-      value: healthMetrics.length,
-      icon: Heart,
-      color: "text-white",
-      bg: "bg-white/10",
-    },
-    {
-      label: "Capítulos",
-      value: publishedChapters,
-      total: totalChapters,
-      icon: BookOpen,
-      color: "text-white",
-      bg: "bg-white/10",
-    },
-    {
-      label: "Eventos Hoy",
-      value: todayEvents,
-      icon: Calendar,
-      color: "text-white",
-      bg: "bg-white/10",
-    },
-  ]
-
-  const weekDays = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]
-
   return (
     <div className="max-w-7xl mx-auto space-y-10">
-      {/* Header */}
-      <div>
-        <h1 className="font-sans text-4xl font-light tracking-tight">
-          Panel de <span className="italic text-white">Control</span>
-        </h1>
-        <p className="font-mono text-xs text-muted-foreground mt-2 tracking-wider">
-          Visión general de tu ecosistema personal
-        </p>
-      </div>
+      {/* Hero: 3D figure as a full-bleed background reaching the top edge, header + stats overlaid */}
+      <div className="relative w-full h-[620px] md:h-[860px] -mt-8">
+        <div className="absolute inset-0">
+          <SentientFigure accentColor="#7dd3fc" />
+        </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-        {stats.map((stat, i) => {
-          const Icon = stat.icon
-          return (
-            <motion.div
-              key={stat.label}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.08, duration: 0.4 }}
-              className="border border-white/10 p-5 hover:border-white/20 transition-colors"
-            >
-              <div className="flex items-start justify-between mb-4">
-                <div className={`p-2 rounded-sm ${stat.bg}`}>
-                  <Icon className={`w-4 h-4 ${stat.color}`} />
-                </div>
-                {stat.total !== undefined && (
-                  <span className="font-mono text-[10px] text-muted-foreground">
-                    de {stat.total}
-                  </span>
-                )}
-              </div>
-              <div className="space-y-1">
-                <p className="font-sans text-3xl font-light tracking-tight">
-                  {stat.value}
-                </p>
-                <p className="font-mono text-[10px] text-muted-foreground tracking-wider uppercase">
-                  {stat.label}
-                </p>
-              </div>
-            </motion.div>
-          )
-        })}
+        <div className="relative z-10 pt-8 pointer-events-none">
+          <h1 className="font-sans text-4xl font-light tracking-tight pointer-events-auto">
+            Panel de <span className="italic text-white">Control</span>
+          </h1>
+          <p className="font-mono text-xs text-muted-foreground mt-2 tracking-wider pointer-events-auto">
+            Visión general de tu ecosistema personal
+          </p>
+        </div>
+
+        <div className="absolute inset-y-0 right-0 flex flex-col justify-center gap-3 pr-1 md:pr-4 pointer-events-none [&>*]:pointer-events-auto">
+          <SideStat label="Proyectos" value={activeProjects} icon={FolderKanban} index={0} />
+          <SideStat label="Rutinas" value={completedToday} icon={Repeat} index={1} />
+          <SideStat label="Salud" value={healthMetrics.length} icon={Heart} index={2} />
+          <SideStat label="Capítulos" value={publishedChapters} icon={BookOpen} index={3} />
+          <SideStat label="Eventos" value={todayEvents} icon={Calendar} index={4} />
+        </div>
       </div>
 
       {/* Quick Actions + Recent */}

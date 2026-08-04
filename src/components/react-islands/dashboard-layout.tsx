@@ -10,6 +10,7 @@ import DashboardRoutines from "./dashboard-routines"
 import DashboardHealth from "./dashboard-health"
 import DashboardResearch from "./dashboard-research"
 import DashboardCalendar from "./dashboard-calendar"
+import DashboardSecurity from "./dashboard-security"
 import DashboardBackupControls from "./dashboard-backup-controls"
 
 const views: Record<ViewType, React.FC> = {
@@ -19,6 +20,7 @@ const views: Record<ViewType, React.FC> = {
   health: DashboardHealth,
   research: DashboardResearch,
   calendar: DashboardCalendar,
+  security: DashboardSecurity,
 }
 
 function DashboardShell() {

@@ -7,7 +7,7 @@ export interface Project {
   id: string
   name: string
   description: string
-  status: "active" | "paused" | "completed" | "archived"
+  status: "planning" | "development" | "maintenance" | "completed" | "archived"
   tags: string[]
   url?: string
   icon: ChartType
@@ -108,7 +108,7 @@ const defaultData: DashboardData = {
       id: "1",
       name: "Portafolio Efren",
       description: "Sistema de portafolio personal con dashboard integrado",
-      status: "active",
+      status: "development",
       tags: ["astro", "react", "tailwind", "three.js"],
       url: "",
       icon: "pulse",
@@ -221,6 +221,12 @@ function sanitizeData(raw: unknown): DashboardData {
     projects: (Array.isArray(parsed.projects) ? parsed.projects : []).map((p) => ({
       ...p,
       icon: p.icon ?? "bars",
+      status:
+        (p as { status?: string }).status === "active"
+          ? "development"
+          : (p as { status?: string }).status === "paused"
+            ? "maintenance"
+            : (p.status ?? "planning"),
     })),
     routines: (Array.isArray(parsed.routines) ? parsed.routines : []).map((r) => ({
       ...r,

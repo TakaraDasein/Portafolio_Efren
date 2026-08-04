@@ -8,6 +8,7 @@ import {
   Heart,
   BookOpen,
   Calendar,
+  ShieldCheck,
   ChevronLeft,
   LogOut,
 } from "lucide-react"
@@ -19,6 +20,7 @@ export type ViewType =
   | "health"
   | "research"
   | "calendar"
+  | "security"
 
 interface NavItem {
   id: ViewType
@@ -33,6 +35,7 @@ const navItems: NavItem[] = [
   { id: "health", label: "Salud & Mente", icon: Heart },
   { id: "research", label: "Investigación", icon: BookOpen },
   { id: "calendar", label: "Calendario", icon: Calendar },
+  { id: "security", label: "Hiper Seguridad", icon: ShieldCheck },
 ]
 
 interface DashboardSidebarProps {
