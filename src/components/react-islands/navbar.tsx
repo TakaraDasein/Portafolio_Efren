@@ -3,11 +3,23 @@
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 
-const navLinks = [
-  { label: "Sobre M�", href: "#about" },
-  { label: "Contacto", href: "#contact" },
-]
 import { useRef } from "react"
+
+// Secciones reales del home (ids definidos en hero/data-lifecycle/about/tech-marquee/footer)
+const sectionLinks = [
+  { label: "Inicio", href: "#inicio" },
+  { label: "Ciclo de Datos", href: "#ciclo-datos" },
+  { label: "Sobre Mí", href: "#sobre-mi" },
+  { label: "Tecnologías", href: "#tecnologias" },
+  { label: "Contacto", href: "#contacto" },
+]
+
+// Áreas de trabajo: páginas propias del portafolio
+const areaLinks = [
+  { label: "Análisis de Datos", href: "/analisis-datos", color: "#39cbe3" },
+  { label: "Machine Learning", href: "/machine-learning", color: "#ef4444" },
+  { label: "Medio Ambiente y Sociedad", href: "/medio-ambiente-sociedad", color: "#10b981" },
+]
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -76,7 +88,7 @@ export default function Navbar() {
 
           {/* Desktop Navigation */}
 
-          <div className="hidden md:flex items-center gap-6">
+          <div className="hidden xl:flex items-center gap-6">
             <div
               ref={dashboardButtonRef}
               style={{ opacity: dashboardOpacity }}
@@ -101,7 +113,7 @@ export default function Navbar() {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden relative w-8 h-8 flex flex-col items-center justify-center gap-1.5"
+            className="xl:hidden relative w-8 h-8 flex flex-col items-center justify-center gap-1.5"
             aria-label="Toggle menu"
           >
             <motion.span
@@ -128,24 +140,91 @@ export default function Navbar() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-40 bg-background/95 backdrop-blur-lg md:hidden"
+            className="fixed inset-0 z-40 bg-background/95 backdrop-blur-lg xl:hidden overflow-y-auto"
           >
-            <nav className="flex flex-col items-center justify-center h-full gap-8">
-              {navLinks.map((link, index) => (
-                <motion.button
-                  key={link.label}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 20 }}
-                  transition={{ delay: index * 0.1 }}
-                  onClick={() => scrollToSection(link.href)}
-                  className="group text-4xl font-sans tracking-tight text-foreground"
-                >
-                  <span className="text-accent font-mono text-sm mr-2">0{index + 1}</span>
-                  {link.label}
-                </motion.button>
-              ))}
+            <nav className="flex min-h-full flex-col justify-center gap-10 px-8 py-24 sm:px-12">
+              {/* Secciones del home */}
+              <div className="flex flex-col gap-3">
+                <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-white/25">
+                  Navegación
+                </span>
+                {sectionLinks.map((link, index) => (
+                  <motion.button
+                    key={link.href}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 20 }}
+                    transition={{ delay: index * 0.05 }}
+                    onClick={() => scrollToSection(link.href)}
+                    className="group flex items-baseline gap-3 text-left text-3xl font-sans font-light tracking-tight text-foreground transition-colors hover:text-white sm:text-4xl"
+                  >
+                    <span className="font-mono text-xs text-white/30">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    {link.label}
+                  </motion.button>
+                ))}
+              </div>
 
+              {/* Áreas de trabajo */}
+              <div className="flex flex-col gap-3">
+                <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-white/25">
+                  Áreas
+                </span>
+                {areaLinks.map((link, index) => (
+                  <motion.a
+                    key={link.href}
+                    href={link.href}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 20 }}
+                    transition={{ delay: 0.25 + index * 0.05 }}
+                    onClick={() => setIsMenuOpen(false)}
+                    className="group flex items-center gap-3 font-sans text-xl font-light tracking-tight text-white/70 transition-colors hover:text-white"
+                  >
+                    <span
+                      className="h-2 w-2 flex-shrink-0"
+                      style={{ backgroundColor: link.color }}
+                    />
+                    {link.label}
+                  </motion.a>
+                ))}
+              </div>
+
+              {/* Acceso al sistema personal */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                transition={{ delay: 0.45 }}
+                className="flex flex-col gap-3 border-t border-white/10 pt-6"
+              >
+                <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-white/25">
+                  Sistema
+                </span>
+                <div className="flex flex-wrap gap-3">
+                  <a
+                    href="/dashboard"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="group flex items-center gap-2 border border-white/15 px-4 py-3 font-mono text-xs uppercase tracking-widest text-white/70 transition-colors hover:border-white hover:text-white"
+                  >
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                    </svg>
+                    Panel
+                  </a>
+                  <a
+                    href="/login"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="group flex items-center gap-2 border border-white/15 px-4 py-3 font-mono text-xs uppercase tracking-widest text-white/70 transition-colors hover:border-white hover:text-white"
+                  >
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
+                    </svg>
+                    Iniciar sesión
+                  </a>
+                </div>
+              </motion.div>
             </nav>
           </motion.div>
         )}

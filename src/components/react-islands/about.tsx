@@ -47,7 +47,7 @@ export default function About() {
   const current = statements[index]
 
   return (
-    <section className="relative py-32 overflow-hidden md:py-40">
+    <section id="sobre-mi" className="relative py-32 overflow-hidden md:py-40">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}

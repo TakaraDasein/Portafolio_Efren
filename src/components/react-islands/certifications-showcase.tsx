@@ -292,7 +292,7 @@ export default function CertificationsShowcase() {
             >
 
               {/* ── CUADRÍCULA DE PREVIEWS ── */}
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                 {activeItems.map((item, index) => {
                   const isActive = selectedIndex === index
                   return (
@@ -344,7 +344,7 @@ export default function CertificationsShowcase() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -8 }}
                       transition={{ duration: 0.22, ease: "easeOut" }}
-                      className="flex flex-col gap-4 px-5 py-5 md:flex-row md:items-start md:gap-8 md:px-8 md:py-6"
+                      className="flex flex-col gap-4 px-5 py-5 xl:flex-row xl:items-start md:gap-8 md:px-8 md:py-6"
                     >
                       <div className="flex flex-shrink-0 flex-col gap-2 md:w-44">
                         <div className="flex items-center gap-3">
@@ -361,7 +361,7 @@ export default function CertificationsShowcase() {
                         <span className="font-mono text-[11px] tracking-widest text-white/20">{infoItem.year}</span>
                       </div>
 
-                      <div className="hidden w-px self-stretch bg-white/8 md:block" />
+                      <div className="hidden w-px self-stretch bg-white/8 xl:block" />
 
                       <div className="flex flex-1 flex-col gap-2">
                         <h3 className="font-sans text-xl font-light leading-snug text-white md:text-2xl lg:text-3xl">
@@ -372,7 +372,7 @@ export default function CertificationsShowcase() {
                         </p>
                       </div>
 
-                      <div className="hidden md:flex items-center gap-2 self-start pt-1">
+                      <div className="hidden xl:flex items-center gap-2 self-start pt-1">
                         <button
                           type="button"
                           onClick={goToPrev}

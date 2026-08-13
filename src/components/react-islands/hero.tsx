@@ -143,12 +143,12 @@ export default function Hero() {
   ]
 
   return (
-    <section ref={containerRef} className="relative h-screen w-full overflow-hidden bg-[#050505]">
+    <section id="inicio" ref={containerRef} className="relative h-screen w-full overflow-hidden bg-[#050505]">
       {/* Partículas de datos sutiles */}
       <DataParticles color={activeColor} />
       
       {/* 3D Sphere - Background en móvil, Foreground en desktop */}
-      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] sm:w-[400px] sm:h-[400px] md:w-[450px] md:h-[450px] lg:w-[500px] lg:h-[500px] xl:w-[600px] xl:h-[600px] 2xl:w-[700px] 2xl:h-[700px] z-0 md:z-50 opacity-70 md:opacity-90 lg:opacity-95 xl:opacity-100 pointer-events-auto overflow-visible">
+      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] sm:w-[400px] sm:h-[400px] md:w-[450px] md:h-[450px] lg:w-[500px] lg:h-[500px] xl:w-[600px] xl:h-[600px] 2xl:w-[700px] 2xl:h-[700px] z-0 xl:z-50 opacity-70 xl:opacity-100 pointer-events-auto overflow-visible">
         <SentientSphere accentColor={activeColor} />
       </div>
 
@@ -234,11 +234,11 @@ export default function Hero() {
       {/* Typography Overlay */}
       <motion.div
         style={{ opacity, scale }}
-        className="relative z-10 h-full flex flex-col justify-center md:justify-between p-6 sm:p-8 md:px-12 lg:px-16 xl:px-24 pt-24 sm:pt-28 md:py-16 lg:py-20 pointer-events-none"
+        className="relative z-10 h-full flex flex-col justify-center xl:justify-between p-6 sm:p-8 md:px-12 lg:px-16 xl:px-24 pt-24 sm:pt-28 md:py-16 lg:py-20 pointer-events-none"
       >
-        <div className="flex flex-col md:flex-row items-center md:justify-between gap-6 sm:gap-8 md:gap-10 lg:gap-12 xl:gap-16 md:flex-1 pointer-events-auto max-w-7xl mx-auto w-full">
+        <div className="flex flex-col xl:flex-row items-center xl:justify-between gap-6 sm:gap-8 md:gap-10 lg:gap-12 xl:gap-16 xl:flex-1 pointer-events-auto max-w-7xl mx-auto w-full">
           {/* Left Side - Profile & Text */}
-          <div className="flex flex-col items-center md:items-start gap-3 sm:gap-4 md:gap-6 lg:gap-8">
+          <div className="flex flex-col items-center xl:items-start gap-3 sm:gap-4 md:gap-6 lg:gap-8">
             <motion.div
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
@@ -270,7 +270,7 @@ export default function Hero() {
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-              className="text-center md:text-left"
+              className="text-center xl:text-left"
             >
               <h1 className="font-sans text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl 2xl:text-5xl font-light tracking-tight">
                 Alvaro Efren <span className="italic">B.S.</span>
@@ -290,7 +290,7 @@ export default function Hero() {
                   </motion.p>
                 </AnimatePresence>
               </div>
-              <div className="w-[220px] sm:w-[240px] md:w-[280px] lg:w-[320px] xl:w-[360px] mx-auto md:mx-0 h-[60px] sm:h-[64px] md:h-[68px] lg:h-[72px] xl:h-[76px] flex items-start mt-2 sm:mt-2 md:mt-2 lg:mt-3">
+              <div className="w-[220px] sm:w-[240px] md:w-[280px] lg:w-[320px] xl:w-[360px] mx-auto xl:mx-0 h-[60px] sm:h-[64px] md:h-[68px] lg:h-[72px] xl:h-[76px] flex items-start mt-2 sm:mt-2 md:mt-2 lg:mt-3">
                 <p className="font-mono text-[10px] sm:text-xs md:text-xs lg:text-sm xl:text-base text-muted-foreground tracking-wide leading-relaxed">
                   {displayedText.split('').map((char, index) => {
                     const currentPhrase = phrases[currentPhraseIndex]
@@ -308,7 +308,7 @@ export default function Hero() {
                   {isTyping && <span className="animate-pulse" style={{ color: activeColor }}>|</span>}
                 </p>
               </div>
-              <SocialLinks accentColor={activeColor} className="mt-3 sm:mt-4 justify-center md:justify-start" />
+              <SocialLinks accentColor={activeColor} className="mt-3 sm:mt-4 justify-center xl:justify-start" />
             </motion.div>
           </div>
 
@@ -317,7 +317,7 @@ export default function Hero() {
             initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 1, delay: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
-            className="flex flex-row justify-center md:flex-col gap-4 sm:gap-5 md:gap-5 lg:gap-6 xl:gap-10"
+            className="flex flex-row justify-center xl:flex-col gap-4 sm:gap-5 md:gap-5 lg:gap-6 xl:gap-10"
           >
             {navigationButtons.map((button, index) => (
               <motion.div
@@ -366,7 +366,7 @@ export default function Hero() {
                       x: hoveredButton === button.id ? 0 : 10,
                     }}
                     transition={{ duration: 0.2 }}
-                    className="absolute right-full mr-6 top-1/2 -translate-y-1/2 pointer-events-none whitespace-nowrap hidden lg:block"
+                    className="absolute right-full mr-6 top-1/2 -translate-y-1/2 pointer-events-none whitespace-nowrap hidden xl:block"
                   >
                     <div className="relative">
                       <div className="bg-black px-5 py-3" style={{ border: "1px solid", borderColor: buttonColors[button.id] }}>
@@ -387,7 +387,7 @@ export default function Hero() {
                       y: hoveredButton === button.id ? 0 : 10,
                     }}
                     transition={{ duration: 0.2 }}
-                    className="absolute top-full mt-4 left-1/2 -translate-x-1/2 pointer-events-none whitespace-nowrap lg:hidden"
+                    className="absolute top-full mt-4 left-1/2 -translate-x-1/2 pointer-events-none whitespace-nowrap xl:hidden"
                   >
                     <div className="relative">
                       <div className="bg-black px-5 py-3" style={{ border: "1px solid", borderColor: buttonColors[button.id] }}>
@@ -419,7 +419,7 @@ export default function Hero() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.5 }}
-        className="hidden md:block absolute bottom-8 left-1/2 -translate-x-1/2 z-20"
+        className="hidden xl:block absolute bottom-8 left-1/2 -translate-x-1/2 z-20"
       >
         <motion.div
           animate={{ y: [0, 8, 0] }}

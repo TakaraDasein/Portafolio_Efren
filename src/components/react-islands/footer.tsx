@@ -25,7 +25,7 @@ export default function Footer() {
   }, [])
 
   return (
-    <footer className="relative">
+    <footer id="contacto" className="relative">
       {/* Main CTA */}
       <motion.a
         href="mailto:efren.dataviz@gmail.com?subject=Consulta%20desde%20tu%20portafolio&body=Hola%20Efren%2C%0A%0ATe%20escribo%20desde%20tu%20portafolio%20porque%20me%20interesa%20conversar%20sobre%20un%20proyecto.%0A%0AQuedo%20atento%2Fa%2C%0A%5BTu%20nombre%5D"
@@ -43,9 +43,9 @@ export default function Footer() {
         />
 
         <div className="relative py-16 md:py-24 px-8 md:px-12 border-t border-white/10">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+          <div className="flex flex-col xl:flex-row items-center justify-between gap-8">
             <motion.h2
-              className="font-sans text-4xl md:text-6xl lg:text-8xl font-light tracking-tight text-center md:text-left"
+              className="font-sans text-4xl md:text-6xl lg:text-8xl font-light tracking-tight text-center xl:text-left"
               animate={{
                 color: isHovered ? "#050505" : "#fafafa",
               }}
@@ -69,7 +69,7 @@ export default function Footer() {
 
       {/* Footer Info */}
       <div className="px-8 md:px-12 py-8 border-t border-white/10">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex flex-col xl:flex-row items-center justify-between gap-4">
           <div className="font-mono text-xs tracking-widest text-muted-foreground">
             <span className="mr-2">HORA LOCAL</span>
             <span className="text-white tabular-nums">{time}</span>

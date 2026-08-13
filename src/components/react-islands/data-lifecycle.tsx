@@ -277,7 +277,7 @@ export default function DataLifecycle({ accentColor = "#ffffff" }: { accentColor
   }
 
   return (
-    <section className="relative py-24 md:py-32 px-8 md:px-12 bg-[#0a0a0a] overflow-hidden">
+    <section id="ciclo-datos" className="relative py-24 md:py-32 px-8 md:px-12 bg-[#0a0a0a] overflow-hidden">
       {/* Background Grid */}
       <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:50px_50px]" />
 
@@ -383,7 +383,7 @@ export default function DataLifecycle({ accentColor = "#ffffff" }: { accentColor
             transition={{ duration: 0.4 }}
           >
         {/* Desktop: Horizontal Flow */}
-        <div className="hidden md:block">
+        <div className="hidden xl:block">
           {/* Timeline */}
           <div className="relative mb-8">
             <div className="absolute top-1/2 left-0 right-0 h-px bg-white/10 -translate-y-1/2" />
@@ -508,7 +508,7 @@ export default function DataLifecycle({ accentColor = "#ffffff" }: { accentColor
                       className="border-2 bg-[#0a0a0a] p-8 md:p-12"
                       style={{ borderColor: "var(--accent)" }}
                     >
-                      <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+                      <div className="grid xl:grid-cols-2 gap-8 md:gap-12 items-center">
                         {/* Left: Large Animation */}
                         <div
                           className="flex items-center justify-center border border-white/10 bg-white/[0.02] p-8 md:h-80"
@@ -641,7 +641,7 @@ export default function DataLifecycle({ accentColor = "#ffffff" }: { accentColor
         </div>
 
         {/* Mobile: Vertical Stack */}
-        <div className="md:hidden space-y-6">
+        <div className="xl:hidden space-y-6">
           {lifecycleStages.map((stage, index) => {
             const isActive = activeStage === stage.id
             const detail = isActive ? selectedDetail : null
