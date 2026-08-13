@@ -1,0 +1,25 @@
+---
+import Layout from '../layouts/Layout.astro'
+---
+
+<Layout title="Página no encontrada | Efren">
+  <main class="min-h-screen flex items-center justify-center bg-background px-4">
+    <div class="border border-white/10 p-8 w-full max-w-sm space-y-5 text-center">
+      <p class="font-mono text-[10px] text-muted-foreground/60 tracking-widest uppercase">
+        Error 404
+      </p>
+      <h1 class="font-sans text-2xl font-light">
+        Página no <span class="italic text-white">encontrada</span>
+      </h1>
+      <p class="font-mono text-xs text-muted-foreground tracking-wider">
+        El enlace puede estar roto o la página ya no existe. El resto del sitio sigue funcionando con normalidad.
+      </p>
+      <a
+        href="/"
+        class="inline-block w-full px-6 py-3 bg-white text-black font-mono text-xs tracking-wider hover:bg-gray-300 transition-colors"
+      >
+        VOLVER AL INICIO
+      </a>
+    </div>
+  </main>
+</Layout>

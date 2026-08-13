@@ -1,0 +1,34 @@
+---
+export const prerender = false
+import Layout from '../layouts/Layout.astro'
+
+const ref = Astro.url.searchParams.get('ref')
+const safeRef = ref && /^[a-z0-9]{1,20}$/i.test(ref) ? ref : null
+---
+
+<Layout title="Algo se interrumpió | Efren">
+  <main class="min-h-screen flex items-center justify-center bg-background px-4">
+    <div class="border border-white/10 p-8 w-full max-w-sm space-y-5 text-center">
+      <p class="font-mono text-[10px] text-muted-foreground/60 tracking-widest uppercase">
+        Algo se interrumpió
+      </p>
+      <h1 class="font-sans text-2xl font-light">
+        Todo está <span class="italic text-white">bien</span>
+      </h1>
+      <p class="font-mono text-xs text-muted-foreground tracking-wider">
+        Ocurrió un error inesperado, pero ya quedó registrado para revisarlo. Puedes seguir navegando con confianza.
+      </p>
+      {safeRef && (
+        <p class="font-mono text-[10px] text-muted-foreground/60 tracking-widest uppercase">
+          Referencia: {safeRef}
+        </p>
+      )}
+      <a
+        href="/"
+        class="inline-block w-full px-6 py-3 bg-white text-black font-mono text-xs tracking-wider hover:bg-gray-300 transition-colors"
+      >
+        VOLVER AL INICIO
+      </a>
+    </div>
+  </main>
+</Layout>

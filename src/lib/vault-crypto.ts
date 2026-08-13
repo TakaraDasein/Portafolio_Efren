@@ -4,7 +4,8 @@ const ALGORITHM = "aes-256-gcm"
 const IV_LENGTH = 12
 
 function getKey(): Buffer {
-  const key = import.meta.env.VAULT_ENCRYPTION_KEY
+  // process.env se lee en runtime; import.meta.env solo si existía en el build.
+  const key = process.env.VAULT_ENCRYPTION_KEY ?? import.meta.env.VAULT_ENCRYPTION_KEY
   if (!key) {
     throw new Error("VAULT_ENCRYPTION_KEY no está configurado en las variables de entorno")
   }

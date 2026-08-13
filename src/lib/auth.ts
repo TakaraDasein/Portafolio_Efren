@@ -3,8 +3,14 @@ import { createHmac, timingSafeEqual } from "node:crypto"
 export const SESSION_COOKIE_NAME = "dashboard_session"
 export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 30 // 30 días
 
+// process.env se lee en runtime (Vercel); import.meta.env solo existe si la
+// variable estaba presente durante el build, así que va como respaldo local.
+function readEnv(name: string): string | undefined {
+  return process.env[name] ?? (import.meta.env as Record<string, string | undefined>)[name]
+}
+
 function getSecret(): string {
-  const secret = import.meta.env.AUTH_SECRET
+  const secret = readEnv("AUTH_SECRET")
   if (!secret) {
     throw new Error("AUTH_SECRET no está configurado en las variables de entorno")
   }
@@ -38,7 +44,7 @@ export function isValidSessionToken(token: string | undefined): boolean {
 }
 
 export function checkPassword(password: string): boolean {
-  const expected = import.meta.env.DASHBOARD_PASSWORD
+  const expected = readEnv("DASHBOARD_PASSWORD")
   if (!expected) {
     throw new Error("DASHBOARD_PASSWORD no está configurado en las variables de entorno")
   }

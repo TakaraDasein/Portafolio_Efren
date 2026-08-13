@@ -3,16 +3,21 @@ export const prerender = false
 import type { APIRoute } from "astro"
 import { requireSession } from "../../../lib/auth"
 import { listVaultSecrets, addVaultSecret, deleteVaultSecret, type VaultSecret } from "../../../lib/vault-store"
+import { jsonServerError } from "../../../lib/api-error"
 
 export const GET: APIRoute = async ({ cookies }) => {
   if (!requireSession(cookies)) {
     return new Response(JSON.stringify({ error: "No autorizado" }), { status: 401 })
   }
-  const secrets = await listVaultSecrets()
-  return new Response(JSON.stringify({ secrets }), {
-    status: 200,
-    headers: { "Content-Type": "application/json" },
-  })
+  try {
+    const secrets = await listVaultSecrets()
+    return new Response(JSON.stringify({ secrets }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    })
+  } catch (err) {
+    return jsonServerError("GET /api/vault", err)
+  }
 }
 
 export const POST: APIRoute = async ({ request, cookies }) => {
@@ -32,11 +37,15 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     return new Response(JSON.stringify({ error: "label y value son obligatorios" }), { status: 400 })
   }
 
-  const secret = await addVaultSecret({ label, value, category, notes })
-  return new Response(JSON.stringify({ secret }), {
-    status: 201,
-    headers: { "Content-Type": "application/json" },
-  })
+  try {
+    const secret = await addVaultSecret({ label, value, category, notes })
+    return new Response(JSON.stringify({ secret }), {
+      status: 201,
+      headers: { "Content-Type": "application/json" },
+    })
+  } catch (err) {
+    return jsonServerError("POST /api/vault", err)
+  }
 }
 
 export const DELETE: APIRoute = async ({ request, cookies }) => {
@@ -50,6 +59,10 @@ export const DELETE: APIRoute = async ({ request, cookies }) => {
     return new Response(JSON.stringify({ error: "id es obligatorio" }), { status: 400 })
   }
 
-  await deleteVaultSecret(id)
-  return new Response(null, { status: 204 })
+  try {
+    await deleteVaultSecret(id)
+    return new Response(null, { status: 204 })
+  } catch (err) {
+    return jsonServerError("DELETE /api/vault", err)
+  }
 }
