@@ -1,35 +1,36 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useDashboard, type Routine } from "../../data/dashboard-store"
+import { categoryConfig, difficultyConfig, weekDays } from "./routine-config"
+import { ConsistencyGrid } from "./wellbeing-visuals"
+import DashboardInsights from "./dashboard-insights"
+import {
+  adherence,
+  computeStreak,
+  consistencyGrid,
+  isCompletedOn,
+  isStreakAtRisk,
+  todayISO,
+} from "../../lib/wellbeing"
 import {
   Plus,
   Trash2,
   X,
   Check,
   Flame,
-  Dumbbell,
-  Brain,
-  Users,
-  Briefcase,
-  Palette,
-  HelpCircle,
   Pause,
   Play,
   Edit3,
+  Shield,
+  Clock,
+  Link2,
+  ChevronDown,
 } from "lucide-react"
 
-export const categoryConfig = {
-  physical: { icon: Dumbbell, label: "Físico", color: "text-white" },
-  mental: { icon: Brain, label: "Mental", color: "text-white" },
-  social: { icon: Users, label: "Social", color: "text-white" },
-  work: { icon: Briefcase, label: "Trabajo", color: "text-white" },
-  creative: { icon: Palette, label: "Creativo", color: "text-white" },
-  other: { icon: HelpCircle, label: "Otro", color: "text-muted-foreground" },
-}
+export { categoryConfig }
 
-const weekDays = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]
 const calendarHours = Array.from({ length: 14 }, (_, i) => i + 7)
 
 const emptyRoutine = {
@@ -38,6 +39,10 @@ const emptyRoutine = {
   frequency: "daily" as Routine["frequency"],
   daysOfWeek: [0, 1, 2, 3, 4, 5, 6] as number[],
   hour: 7,
+  difficulty: "medium" as Routine["difficulty"],
+  cue: "",
+  identity: "",
+  stackAfterId: "",
 }
 
 export default function DashboardRoutines() {
@@ -45,20 +50,29 @@ export default function DashboardRoutines() {
     useDashboard()
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [showDetails, setShowDetails] = useState(false)
   const [form, setForm] = useState(emptyRoutine)
 
   const resetForm = () => {
     setForm(emptyRoutine)
     setEditingId(null)
+    setShowDetails(false)
     setShowForm(false)
   }
 
   const handleSubmit = () => {
     if (!form.name.trim()) return
+    const payload = {
+      ...form,
+      name: form.name.trim(),
+      cue: form.cue.trim() || undefined,
+      identity: form.identity.trim() || undefined,
+      stackAfterId: form.stackAfterId || undefined,
+    }
     if (editingId) {
-      updateRoutine(editingId, form)
+      updateRoutine(editingId, payload)
     } else {
-      addRoutine(form)
+      addRoutine(payload)
     }
     resetForm()
   }
@@ -70,7 +84,12 @@ export default function DashboardRoutines() {
       frequency: routine.frequency,
       daysOfWeek: [...routine.daysOfWeek],
       hour: routine.hour,
+      difficulty: routine.difficulty,
+      cue: routine.cue ?? "",
+      identity: routine.identity ?? "",
+      stackAfterId: routine.stackAfterId ?? "",
     })
+    setShowDetails(Boolean(routine.cue || routine.identity || routine.stackAfterId))
     setEditingId(routine.id)
     setShowForm(true)
   }
@@ -84,10 +103,39 @@ export default function DashboardRoutines() {
     })
   }
 
-  const today = new Date().getDay()
+  const today = todayISO()
+  const todayDow = new Date().getDay()
+
+  // Métricas derivadas por rutina: una sola pasada, memorizada.
+  const stats = useMemo(() => {
+    const map = new Map<
+      string,
+      {
+        streak: number
+        forgiven: number
+        adherence30: ReturnType<typeof adherence>
+        doneToday: boolean
+        atRisk: boolean
+      }
+    >()
+    for (const routine of data.routines) {
+      const { streak, forgiven } = computeStreak(routine, today)
+      map.set(routine.id, {
+        streak,
+        forgiven,
+        adherence30: adherence(routine, 30, today),
+        doneToday: isCompletedOn(routine, today),
+        atRisk: isStreakAtRisk(routine),
+      })
+    }
+    return map
+  }, [data.routines, today])
+
   const todayRoutines = data.routines.filter(
-    (r) => r.daysOfWeek.includes(today) && !r.paused,
+    (r) => r.daysOfWeek.includes(todayDow) && !r.paused,
   )
+  const doneCount = todayRoutines.filter((r) => stats.get(r.id)?.doneToday).length
+  const routineName = (id?: string) => data.routines.find((r) => r.id === id)?.name
 
   return (
     <div className="max-w-7xl mx-auto space-y-10">
@@ -97,7 +145,7 @@ export default function DashboardRoutines() {
             Gestión de <span className="italic text-white">Rutinas</span>
           </h1>
           <p className="font-mono text-xs text-muted-foreground mt-2 tracking-wider">
-            {data.routines.length} rutinas • {todayRoutines.length} para hoy
+            {data.routines.length} rutinas • {doneCount}/{todayRoutines.length} hoy
           </p>
         </div>
         <button
@@ -132,48 +180,81 @@ export default function DashboardRoutines() {
           )}
           {todayRoutines.map((routine) => {
             const CatIcon = categoryConfig[routine.category].icon
-            const doneToday = routine.lastCompleted === new Date().toISOString().split("T")[0]
+            const stat = stats.get(routine.id)!
             return (
               <div
                 key={routine.id}
-                className={`flex items-center gap-3 p-3 border transition-all ${
-                  doneToday
+                className={`p-3 border transition-all ${
+                  stat.doneToday
                     ? "border-white/30 bg-white/5"
-                    : "border-white/10 hover:border-white/30"
+                    : stat.atRisk
+                      ? "border-white/25"
+                      : "border-white/10 hover:border-white/30"
                 }`}
               >
-                <button
-                  onClick={() => toggleRoutine(routine.id)}
-                  className={`p-1.5 rounded-sm border transition-all ${
-                    doneToday
-                      ? "bg-white border-white text-black"
-                      : "border-white/20 text-transparent hover:border-white/50"
-                  }`}
-                >
-                  <Check className="w-3.5 h-3.5" />
-                </button>
-                <CatIcon
-                  className={`w-4 h-4 ${categoryConfig[routine.category].color}`}
-                />
-                <span className="font-mono text-xs flex-1">{routine.name}</span>
-                <span className="font-mono text-[10px] text-white/80">
-                  {routine.hour}:00
-                </span>
-                <span className="flex items-center gap-1 font-mono text-[10px] text-muted-foreground">
-                  <Flame className="w-3 h-3 text-white" />
-                  {routine.streak}
-                </span>
-                <button
-                  onClick={() => deleteRoutine(routine.id)}
-                  className="text-muted-foreground hover:text-white transition-colors"
-                >
-                  <Trash2 className="w-3 h-3" />
-                </button>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => toggleRoutine(routine.id)}
+                    title={stat.doneToday ? "Desmarcar" : "Marcar como cumplida"}
+                    className={`p-1.5 rounded-sm border transition-all ${
+                      stat.doneToday
+                        ? "bg-white border-white text-black"
+                        : "border-white/20 text-transparent hover:border-white/50"
+                    }`}
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                  </button>
+                  <CatIcon className={`w-4 h-4 ${categoryConfig[routine.category].color}`} />
+                  <span className="font-mono text-xs flex-1 truncate">{routine.name}</span>
+                  <span className="font-mono text-[10px] text-white/80">{routine.hour}:00</span>
+                  <span
+                    title={`Racha: ${stat.streak} días programados seguidos`}
+                    className="flex items-center gap-1 font-mono text-[10px] text-muted-foreground"
+                  >
+                    <Flame className="w-3 h-3 text-white" />
+                    {stat.streak}
+                  </span>
+                  {stat.forgiven > 0 && (
+                    <span
+                      title="Una falta aislada quedó perdonada: la racha sigue viva"
+                      className="flex items-center gap-1 font-mono text-[10px] text-muted-foreground"
+                    >
+                      <Shield className="w-3 h-3 text-white/60" />
+                    </span>
+                  )}
+                  <button
+                    onClick={() => deleteRoutine(routine.id)}
+                    className="text-muted-foreground hover:text-white transition-colors"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
+
+                {routine.cue && !stat.doneToday && (
+                  <p className="font-mono text-[10px] text-muted-foreground/70 italic mt-2 ml-9">
+                    {routine.cue}
+                  </p>
+                )}
+
+                {stat.atRisk && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex items-center gap-2 mt-2 ml-9"
+                  >
+                    <Clock className="w-3 h-3 text-white/70 shrink-0" />
+                    <span className="font-mono text-[9px] text-white/70 tracking-wider uppercase">
+                      Racha de {stat.streak} en juego · aún estás a tiempo
+                    </span>
+                  </motion.div>
+                )}
               </div>
             )
           })}
         </div>
       </motion.div>
+
+      <DashboardInsights />
 
       {/* All Routines */}
       <div className="space-y-4">
@@ -182,77 +263,103 @@ export default function DashboardRoutines() {
         </h3>
         {data.routines.map((routine, i) => {
           const CatIcon = categoryConfig[routine.category].icon
+          const stat = stats.get(routine.id)!
+          const grid = consistencyGrid(routine, 28, today)
+          const stackedAfter = routineName(routine.stackAfterId)
           return (
             <motion.div
               key={routine.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.04, duration: 0.3 }}
-              className={`flex items-center gap-3 p-3 border transition-all ${
+              className={`p-3 border transition-all ${
                 routine.paused
                   ? "border-white/5 opacity-50"
                   : "border-white/10 hover:border-white/20"
-              }`}
+              } ${routine.stackAfterId ? "ml-6 border-l-white/25" : ""}`}
             >
-              <CatIcon
-                className={`w-4 h-4 ${categoryConfig[routine.category].color}`}
-              />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="font-mono text-xs truncate">{routine.name}</p>
-                  {routine.paused && (
-                    <span className="font-mono text-[9px] px-1.5 py-0.5 border border-white/30 text-white uppercase tracking-wider shrink-0">
-                      Pausada
+              <div className="flex items-center gap-3">
+                <CatIcon className={`w-4 h-4 ${categoryConfig[routine.category].color}`} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="font-mono text-xs truncate">{routine.name}</p>
+                    {routine.paused && (
+                      <span className="font-mono text-[9px] px-1.5 py-0.5 border border-white/30 text-white uppercase tracking-wider shrink-0">
+                        Pausada
+                      </span>
+                    )}
+                    {stackedAfter && (
+                      <span
+                        title={`Encadenada después de: ${stackedAfter}`}
+                        className="flex items-center gap-1 font-mono text-[9px] text-muted-foreground shrink-0"
+                      >
+                        <Link2 className="w-2.5 h-2.5" />
+                        {stackedAfter}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                    <span className="font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
+                      {categoryConfig[routine.category].label}
                     </span>
+                    <span className="font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
+                      {difficultyConfig[routine.difficulty].label}
+                    </span>
+                    <span className="font-mono text-[9px] text-white/80">{routine.hour}:00</span>
+                    {routine.daysOfWeek.map((d) => (
+                      <span
+                        key={d}
+                        className={`font-mono text-[9px] px-1 ${
+                          d === todayDow ? "text-white bg-white/10" : "text-muted-foreground"
+                        }`}
+                      >
+                        {weekDays[d]}
+                      </span>
+                    ))}
+                  </div>
+                  {routine.identity && (
+                    <p className="font-mono text-[10px] text-white/60 italic mt-1.5 truncate">
+                      “{routine.identity}”
+                    </p>
                   )}
                 </div>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
-                    {categoryConfig[routine.category].label}
-                  </span>
-                  <span className="font-mono text-[9px] text-white/80">
-                    {routine.hour}:00
-                  </span>
-                  {routine.daysOfWeek.map((d) => (
-                    <span
-                      key={d}
-                      className={`font-mono text-[9px] px-1 ${
-                        d === today
-                          ? "text-white bg-white/10"
-                          : "text-muted-foreground"
-                      }`}
-                    >
-                      {weekDays[d]}
-                    </span>
-                  ))}
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    onClick={() => handleEdit(routine)}
+                    title="Editar"
+                    className="p-1.5 text-muted-foreground hover:text-white transition-colors"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => togglePauseRoutine(routine.id)}
+                    title={routine.paused ? "Reanudar" : "Pausar"}
+                    className="p-1.5 text-muted-foreground hover:text-white transition-colors"
+                  >
+                    {routine.paused ? (
+                      <Play className="w-3.5 h-3.5" />
+                    ) : (
+                      <Pause className="w-3.5 h-3.5" />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => deleteRoutine(routine.id)}
+                    title="Eliminar"
+                    className="p-1.5 text-muted-foreground hover:text-white transition-colors"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
                 </div>
               </div>
-              <div className="flex items-center gap-1 shrink-0">
-                <button
-                  onClick={() => handleEdit(routine)}
-                  title="Editar"
-                  className="p-1.5 text-muted-foreground hover:text-white transition-colors"
-                >
-                  <Edit3 className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  onClick={() => togglePauseRoutine(routine.id)}
-                  title={routine.paused ? "Reanudar" : "Pausar"}
-                  className="p-1.5 text-muted-foreground hover:text-white transition-colors"
-                >
-                  {routine.paused ? (
-                    <Play className="w-3.5 h-3.5" />
-                  ) : (
-                    <Pause className="w-3.5 h-3.5" />
-                  )}
-                </button>
-                <button
-                  onClick={() => deleteRoutine(routine.id)}
-                  title="Eliminar"
-                  className="p-1.5 text-muted-foreground hover:text-white transition-colors"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
+
+              {/* Consistencia real de las últimas 4 semanas */}
+              <div className="flex items-center gap-3 mt-3 pl-7">
+                <ConsistencyGrid cells={grid} />
+                <span className="font-mono text-[9px] text-muted-foreground tracking-wider shrink-0">
+                  {stat.adherence30
+                    ? `${Math.round(stat.adherence30.rate * 100)}% · 30d`
+                    : "sin datos aún"}
+                </span>
               </div>
             </motion.div>
           )
@@ -266,21 +373,25 @@ export default function DashboardRoutines() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto"
             onClick={resetForm}
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-background border border-white/10 p-8 max-w-md w-full mx-4"
+              className="bg-background border border-white/10 p-8 max-w-md w-full my-auto"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-6">
                 <h3 className="font-sans text-2xl font-light">
-                  {editingId ? "Editar" : "Nueva"} <span className="italic text-white">Rutina</span>
+                  {editingId ? "Editar" : "Nueva"}{" "}
+                  <span className="italic text-white">Rutina</span>
                 </h3>
-                <button onClick={resetForm} className="text-muted-foreground hover:text-foreground">
+                <button
+                  onClick={resetForm}
+                  className="text-muted-foreground hover:text-foreground"
+                >
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -306,7 +417,12 @@ export default function DashboardRoutines() {
                     Categoría
                   </label>
                   <div className="grid grid-cols-3 gap-2">
-                    {(Object.entries(categoryConfig) as [Routine["category"], typeof categoryConfig["physical"]][]).map(([key, config]) => {
+                    {(
+                      Object.entries(categoryConfig) as [
+                        Routine["category"],
+                        (typeof categoryConfig)["physical"],
+                      ][]
+                    ).map(([key, config]) => {
                       const Icon = config.icon
                       return (
                         <button
@@ -325,6 +441,33 @@ export default function DashboardRoutines() {
                         </button>
                       )
                     })}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="font-mono text-[10px] text-muted-foreground tracking-wider uppercase block mb-1">
+                    Exigencia
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(
+                      Object.entries(difficultyConfig) as [
+                        Routine["difficulty"],
+                        (typeof difficultyConfig)["easy"],
+                      ][]
+                    ).map(([key, config]) => (
+                      <button
+                        key={key}
+                        onClick={() => setForm({ ...form, difficulty: key })}
+                        title={config.hint}
+                        className={`py-2 border font-mono text-[10px] transition-colors ${
+                          form.difficulty === key
+                            ? "border-white bg-white/10 text-white"
+                            : "border-white/10 text-muted-foreground hover:border-white/30"
+                        }`}
+                      >
+                        {config.label}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
@@ -365,6 +508,76 @@ export default function DashboardRoutines() {
                     ))}
                   </select>
                 </div>
+
+                {/* Detalles de diseño de hábito, plegados para no saturar */}
+                <button
+                  onClick={() => setShowDetails(!showDetails)}
+                  className="flex items-center gap-1.5 font-mono text-[10px] text-muted-foreground hover:text-foreground tracking-wider uppercase transition-colors"
+                >
+                  <ChevronDown
+                    className={`w-3 h-3 transition-transform ${showDetails ? "rotate-180" : ""}`}
+                  />
+                  Diseño del hábito
+                </button>
+
+                <AnimatePresence>
+                  {showDetails && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="space-y-4 overflow-hidden"
+                    >
+                      <div>
+                        <label className="font-mono text-[10px] text-muted-foreground tracking-wider uppercase block mb-1">
+                          Disparador
+                        </label>
+                        <input
+                          type="text"
+                          value={form.cue}
+                          onChange={(e) => setForm({ ...form, cue: e.target.value })}
+                          placeholder="Después de servir el café…"
+                          className="w-full bg-transparent border border-white/10 px-4 py-3 font-mono text-sm focus:border-white focus:outline-none transition-colors"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-mono text-[10px] text-muted-foreground tracking-wider uppercase block mb-1">
+                          Identidad
+                        </label>
+                        <input
+                          type="text"
+                          value={form.identity}
+                          onChange={(e) => setForm({ ...form, identity: e.target.value })}
+                          placeholder="Soy alguien que se mueve a diario"
+                          className="w-full bg-transparent border border-white/10 px-4 py-3 font-mono text-sm focus:border-white focus:outline-none transition-colors"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-mono text-[10px] text-muted-foreground tracking-wider uppercase block mb-1">
+                          Encadenar después de
+                        </label>
+                        <select
+                          value={form.stackAfterId}
+                          onChange={(e) => setForm({ ...form, stackAfterId: e.target.value })}
+                          className="w-full bg-transparent border border-white/10 px-4 py-3 font-mono text-sm focus:border-white focus:outline-none transition-colors"
+                        >
+                          <option value="" className="bg-background">
+                            Ninguna
+                          </option>
+                          {data.routines
+                            .filter((r) => r.id !== editingId)
+                            .map((r) => (
+                              <option key={r.id} value={r.id} className="bg-background">
+                                {r.name}
+                              </option>
+                            ))}
+                        </select>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               <div className="flex gap-3 mt-8">

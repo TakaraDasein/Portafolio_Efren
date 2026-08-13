@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react"
 import type { ChartType } from "../components/react-islands/mini-charts"
+import { computeStreak, todayISO } from "../lib/wellbeing"
 
 export interface Project {
   id: string
@@ -15,6 +16,13 @@ export interface Project {
   updatedAt: string
 }
 
+export interface RoutineCompletion {
+  /** YYYY-MM-DD local */
+  date: string
+  /** ISO timestamp; permite analizar a qué hora se cumple de verdad. */
+  completedAt: string
+}
+
 export interface Routine {
   id: string
   name: string
@@ -22,10 +30,20 @@ export interface Routine {
   frequency: "daily" | "weekly" | "custom"
   daysOfWeek: number[]
   hour: number
+  /** Caché derivada de `completions`; nunca es la fuente de verdad. */
   streak: number
   paused: boolean
   lastCompleted?: string
   createdAt: string
+  /** Historial append-only: base de adherencia, rachas y consistencia. */
+  completions: RoutineCompletion[]
+  difficulty: "easy" | "medium" | "hard"
+  /** Disparador: "después de servir el café…" */
+  cue?: string
+  /** Identidad asociada: "soy alguien que se mueve a diario". */
+  identity?: string
+  /** Encadenamiento de hábitos: id de la rutina que la antecede. */
+  stackAfterId?: string
 }
 
 export interface HealthMetric {
@@ -35,6 +53,8 @@ export interface HealthMetric {
   unit: string
   note?: string
   date: string
+  /** Vocabulario emocional breve; solo para registros de ánimo. */
+  moodTags?: string[]
 }
 
 export interface ResearchChapter {
@@ -66,12 +86,31 @@ export interface CalendarEvent {
   color: string
 }
 
+export interface NoteItem {
+  id: string
+  text: string
+  done: boolean
+}
+
+export interface Note {
+  id: string
+  kind: "note" | "list"
+  title: string
+  /** Cuerpo libre; solo se usa cuando `kind` es "note". */
+  body: string
+  /** Casillas marcables; solo se usan cuando `kind` es "list". */
+  items: NoteItem[]
+  createdAt: string
+  updatedAt: string
+}
+
 interface DashboardData {
   projects: Project[]
   routines: Routine[]
   healthMetrics: HealthMetric[]
   researchSeasons: ResearchSeason[]
   calendarEvents: CalendarEvent[]
+  notes: Note[]
 }
 
 interface DashboardContextType {
@@ -79,7 +118,9 @@ interface DashboardContextType {
   addProject: (project: Omit<Project, "id" | "createdAt" | "updatedAt">) => void
   updateProject: (id: string, updates: Partial<Project>) => void
   deleteProject: (id: string) => void
-  addRoutine: (routine: Omit<Routine, "id" | "streak" | "paused" | "createdAt">) => void
+  addRoutine: (
+    routine: Omit<Routine, "id" | "streak" | "paused" | "createdAt" | "completions">,
+  ) => void
   updateRoutine: (id: string, updates: Partial<Routine>) => void
   toggleRoutine: (id: string) => void
   togglePauseRoutine: (id: string) => void
@@ -94,6 +135,13 @@ interface DashboardContextType {
   deleteChapter: (seasonId: string, chapterId: string) => void
   addCalendarEvent: (event: Omit<CalendarEvent, "id">) => void
   deleteCalendarEvent: (id: string) => void
+  addNote: (note: { kind: Note["kind"]; title: string; body?: string; items?: string[] }) => void
+  updateNote: (id: string, updates: Partial<Pick<Note, "title" | "body">>) => void
+  deleteNote: (id: string) => void
+  addNoteItem: (noteId: string, text: string) => void
+  updateNoteItem: (noteId: string, itemId: string, text: string) => void
+  toggleNoteItem: (noteId: string, itemId: string) => void
+  deleteNoteItem: (noteId: string, itemId: string) => void
   lastBackupAt: string | null
   exportData: () => void
   importData: (raw: unknown) => { ok: boolean; error?: string }
@@ -127,6 +175,8 @@ const defaultData: DashboardData = {
       streak: 0,
       paused: false,
       createdAt: "2025-06-01",
+      completions: [],
+      difficulty: "easy",
     },
     {
       id: "2",
@@ -138,6 +188,8 @@ const defaultData: DashboardData = {
       streak: 0,
       paused: false,
       createdAt: "2025-06-01",
+      completions: [],
+      difficulty: "medium",
     },
   ],
   healthMetrics: [],
@@ -213,6 +265,23 @@ const defaultData: DashboardData = {
     { id: "1", day: 0, hour: 9, title: "Daily Standup", color: "#ffffff" },
     { id: "2", day: 2, hour: 14, title: "Client Meeting", color: "#999999" },
   ],
+  notes: [],
+}
+
+/**
+ * Identificador único. `Date.now()` a secas colisiona al añadir varios ítems
+ * seguidos (una lista se escribe a ráfagas), y dos ítems con la misma clave
+ * rompen el renderizado.
+ */
+function createId(): string {
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`
+}
+
+/** Un solo registro por día, en orden ascendente. */
+function dedupeCompletions(completions: RoutineCompletion[]): RoutineCompletion[] {
+  const byDate = new Map<string, RoutineCompletion>()
+  for (const c of completions) byDate.set(c.date, c)
+  return [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date))
 }
 
 function sanitizeData(raw: unknown): DashboardData {
@@ -228,18 +297,43 @@ function sanitizeData(raw: unknown): DashboardData {
             ? "maintenance"
             : (p.status ?? "planning"),
     })),
-    routines: (Array.isArray(parsed.routines) ? parsed.routines : []).map((r) => ({
-      ...r,
-      hour: r.hour ?? 9,
-      paused: r.paused ?? false,
+    routines: (Array.isArray(parsed.routines) ? parsed.routines : []).map((r) => {
+      // Respaldos previos no tienen historial: se siembra con `lastCompleted`
+      // para no perder el único día que sí estaba registrado.
+      const completions: RoutineCompletion[] = Array.isArray(r.completions)
+        ? r.completions.filter((c) => c && typeof c.date === "string")
+        : r.lastCompleted
+          ? [{ date: r.lastCompleted, completedAt: `${r.lastCompleted}T00:00:00.000Z` }]
+          : []
+      const routine: Routine = {
+        ...(r as Routine),
+        hour: r.hour ?? 9,
+        paused: r.paused ?? false,
+        difficulty: r.difficulty ?? "medium",
+        completions: dedupeCompletions(completions),
+      }
+      // La racha almacenada de respaldos viejos era un contador ingenuo;
+      // se recalcula desde el historial real.
+      return { ...routine, streak: computeStreak(routine).streak }
+    }),
+    healthMetrics: (Array.isArray(parsed.healthMetrics) ? parsed.healthMetrics : []).map((m) => ({
+      ...m,
+      moodTags: Array.isArray(m.moodTags) ? m.moodTags : undefined,
     })),
-    healthMetrics: Array.isArray(parsed.healthMetrics) ? parsed.healthMetrics : [],
     researchSeasons: (Array.isArray(parsed.researchSeasons) ? parsed.researchSeasons : []).map((s) => ({
       ...s,
       icon: s.icon ?? "bars",
       chapters: Array.isArray(s.chapters) ? s.chapters : [],
     })),
     calendarEvents: Array.isArray(parsed.calendarEvents) ? parsed.calendarEvents : [],
+    notes: (Array.isArray(parsed.notes) ? parsed.notes : []).map((n) => ({
+      ...n,
+      kind: n.kind === "list" ? "list" : "note",
+      body: typeof n.body === "string" ? n.body : "",
+      items: Array.isArray(n.items)
+        ? n.items.filter((i) => i && typeof i.text === "string").map((i) => ({ ...i, done: Boolean(i.done) }))
+        : [],
+    })),
   }
 }
 
@@ -302,7 +396,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const addRoutine = useCallback(
-    (routine: Omit<Routine, "id" | "streak" | "paused" | "createdAt">) => {
+    (routine: Omit<Routine, "id" | "streak" | "paused" | "createdAt" | "completions">) => {
       setData((prev) => ({
         ...prev,
         routines: [
@@ -312,7 +406,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
             id: Date.now().toString(),
             streak: 0,
             paused: false,
-            createdAt: new Date().toISOString().split("T")[0],
+            createdAt: todayISO(),
+            completions: [],
           },
         ],
       }))
@@ -320,14 +415,26 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     [],
   )
 
+  /** Marca o desmarca el día de hoy y recalcula la racha desde el historial. */
   const toggleRoutine = useCallback((id: string) => {
     setData((prev) => ({
       ...prev,
       routines: prev.routines.map((r) => {
         if (r.id !== id) return r
-        const today = new Date().toISOString().split("T")[0]
-        if (r.lastCompleted === today) return r
-        return { ...r, streak: r.streak + 1, lastCompleted: today }
+        const today = todayISO()
+        const alreadyDone = r.completions.some((c) => c.date === today)
+        const completions = alreadyDone
+          ? r.completions.filter((c) => c.date !== today)
+          : dedupeCompletions([
+              ...r.completions,
+              { date: today, completedAt: new Date().toISOString() },
+            ])
+        const next: Routine = {
+          ...r,
+          completions,
+          lastCompleted: completions.at(-1)?.date,
+        }
+        return { ...next, streak: computeStreak(next).streak }
       }),
     }))
   }, [])
@@ -335,7 +442,12 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const updateRoutine = useCallback((id: string, updates: Partial<Routine>) => {
     setData((prev) => ({
       ...prev,
-      routines: prev.routines.map((r) => (r.id === id ? { ...r, ...updates } : r)),
+      routines: prev.routines.map((r) => {
+        if (r.id !== id) return r
+        // Cambiar los días programados cambia qué cuenta como falta.
+        const next = { ...r, ...updates }
+        return { ...next, streak: computeStreak(next).streak }
+      }),
     }))
   }, [])
 
@@ -351,7 +463,10 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const deleteRoutine = useCallback((id: string) => {
     setData((prev) => ({
       ...prev,
-      routines: prev.routines.filter((r) => r.id !== id),
+      routines: prev.routines
+        .filter((r) => r.id !== id)
+        // Deshace los encadenamientos que apuntaban a la rutina eliminada.
+        .map((r) => (r.stackAfterId === id ? { ...r, stackAfterId: undefined } : r)),
     }))
   }, [])
 
@@ -454,6 +569,111 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     }))
   }, [])
 
+  /* ── Libreta ───────────────────────────────────────────────────────────── */
+
+  const addNote = useCallback(
+    ({ kind, title, body = "", items = [] }: {
+      kind: Note["kind"]
+      title: string
+      body?: string
+      items?: string[]
+    }) => {
+      const stamp = new Date().toISOString()
+      setData((prev) => ({
+        ...prev,
+        notes: [
+          {
+            id: createId(),
+            kind,
+            title,
+            body: kind === "note" ? body : "",
+            items:
+              kind === "list"
+                ? items
+                    .map((text) => text.trim())
+                    .filter(Boolean)
+                    .map((text) => ({ id: createId(), text, done: false }))
+                : [],
+            createdAt: stamp,
+            updatedAt: stamp,
+          },
+          // Lo más reciente primero: la libreta se lee de arriba abajo.
+          ...prev.notes,
+        ],
+      }))
+    },
+    [],
+  )
+
+  /** Cualquier cambio en una nota actualiza su marca de tiempo. */
+  const touchNote = (note: Note, changes: Partial<Note>): Note => ({
+    ...note,
+    ...changes,
+    updatedAt: new Date().toISOString(),
+  })
+
+  const updateNote = useCallback(
+    (id: string, updates: Partial<Pick<Note, "title" | "body">>) => {
+      setData((prev) => ({
+        ...prev,
+        notes: prev.notes.map((n) => (n.id === id ? touchNote(n, updates) : n)),
+      }))
+    },
+    [],
+  )
+
+  const deleteNote = useCallback((id: string) => {
+    setData((prev) => ({ ...prev, notes: prev.notes.filter((n) => n.id !== id) }))
+  }, [])
+
+  const addNoteItem = useCallback((noteId: string, text: string) => {
+    const clean = text.trim()
+    if (!clean) return
+    setData((prev) => ({
+      ...prev,
+      notes: prev.notes.map((n) =>
+        n.id === noteId
+          ? touchNote(n, { items: [...n.items, { id: createId(), text: clean, done: false }] })
+          : n,
+      ),
+    }))
+  }, [])
+
+  const updateNoteItem = useCallback((noteId: string, itemId: string, text: string) => {
+    setData((prev) => ({
+      ...prev,
+      notes: prev.notes.map((n) =>
+        n.id === noteId
+          ? touchNote(n, {
+              items: n.items.map((i) => (i.id === itemId ? { ...i, text } : i)),
+            })
+          : n,
+      ),
+    }))
+  }, [])
+
+  const toggleNoteItem = useCallback((noteId: string, itemId: string) => {
+    setData((prev) => ({
+      ...prev,
+      notes: prev.notes.map((n) =>
+        n.id === noteId
+          ? touchNote(n, {
+              items: n.items.map((i) => (i.id === itemId ? { ...i, done: !i.done } : i)),
+            })
+          : n,
+      ),
+    }))
+  }, [])
+
+  const deleteNoteItem = useCallback((noteId: string, itemId: string) => {
+    setData((prev) => ({
+      ...prev,
+      notes: prev.notes.map((n) =>
+        n.id === noteId ? touchNote(n, { items: n.items.filter((i) => i.id !== itemId) }) : n,
+      ),
+    }))
+  }, [])
+
   const exportData = useCallback(() => {
     const payload = { ...data, exportedAt: new Date().toISOString(), schemaVersion: 1 }
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" })
@@ -503,6 +723,13 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         deleteChapter,
         addCalendarEvent,
         deleteCalendarEvent,
+        addNote,
+        updateNote,
+        deleteNote,
+        addNoteItem,
+        updateNoteItem,
+        toggleNoteItem,
+        deleteNoteItem,
         lastBackupAt,
         exportData,
         importData,

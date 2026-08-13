@@ -4,7 +4,8 @@ import { useState } from "react"
 import { motion } from "framer-motion"
 import { useDashboard } from "../../data/dashboard-store"
 import { X, Plus } from "lucide-react"
-import { categoryConfig } from "./dashboard-routines"
+import { categoryConfig } from "./routine-config"
+import { fromCalendarColumn } from "../../lib/wellbeing"
 
 const weekDays = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"]
 const hours = Array.from({ length: 14 }, (_, i) => i + 7)
@@ -43,7 +44,7 @@ export default function DashboardCalendar() {
 
   // weekDays column 0 = Lunes, but Routine.daysOfWeek follows JS getDay() (0 = Domingo)
   const getRoutineForSlot = (dayIndex: number, hour: number) => {
-    const jsDay = (dayIndex + 1) % 7
+    const jsDay = fromCalendarColumn(dayIndex)
     return data.routines.find(
       (r) => !r.paused && r.hour === hour && r.daysOfWeek.includes(jsDay),
     )
