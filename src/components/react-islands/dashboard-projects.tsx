@@ -6,7 +6,7 @@ import { useDashboard, type Project } from "../../data/dashboard-store"
 import { Plus, ExternalLink, Trash2, X, Archive, Search, Code2, Wrench, CheckCircle2 } from "lucide-react"
 import MiniChart, { chartTypes, type ChartType } from "./mini-charts"
 
-const statusIcons = {
+export const statusIcons = {
   planning: Search,
   development: Code2,
   maintenance: Wrench,
@@ -27,7 +27,7 @@ const statusGlow = {
   completed: "255,255,255",
   archived: "110,110,110",
 }
-const statusLabels = {
+export const statusLabels = {
   planning: "Planeación",
   development: "Desarrollo",
   maintenance: "Mantenimiento",

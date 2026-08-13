@@ -9,9 +9,11 @@ import {
   BookOpen,
   Calendar,
   ShieldCheck,
+  NotebookPen,
   ChevronLeft,
   LogOut,
 } from "lucide-react"
+import DashboardBackupControls from "./dashboard-backup-controls"
 
 export type ViewType =
   | "home"
@@ -20,6 +22,7 @@ export type ViewType =
   | "health"
   | "research"
   | "calendar"
+  | "notebook"
   | "security"
 
 interface NavItem {
@@ -35,6 +38,7 @@ const navItems: NavItem[] = [
   { id: "health", label: "Salud & Mente", icon: Heart },
   { id: "research", label: "Investigación", icon: BookOpen },
   { id: "calendar", label: "Calendario", icon: Calendar },
+  { id: "notebook", label: "Libreta", icon: NotebookPen },
   { id: "security", label: "Hiper Seguridad", icon: ShieldCheck },
 ]
 
@@ -43,6 +47,13 @@ interface DashboardSidebarProps {
   onNavigate: (view: ViewType) => void
   collapsed: boolean
   onToggle: () => void
+  /** En móvil deja de empujar el contenido y pasa a ser un cajón superpuesto. */
+  mobile?: boolean
+  /** Solo aplica en móvil: si el cajón está desplegado. */
+  open?: boolean
+  onClose?: () => void
+  /** El rail de iconos es obligatorio en tablet, así que el usuario no lo alterna. */
+  lockCollapsed?: boolean
 }
 
 export default function DashboardSidebar({
@@ -50,10 +61,18 @@ export default function DashboardSidebar({
   onNavigate,
   collapsed,
   onToggle,
+  mobile = false,
+  open = false,
+  onClose,
+  lockCollapsed = false,
 }: DashboardSidebarProps) {
   return (
     <motion.aside
-      animate={{ width: collapsed ? 72 : 260 }}
+      animate={{
+        // En móvil conserva su ancho y se desliza fuera de pantalla.
+        width: mobile ? 260 : collapsed ? 72 : 260,
+        x: mobile && !open ? -276 : 0,
+      }}
       transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
       className="fixed left-0 top-0 h-screen z-40 flex flex-col bg-sidebar border-r border-sidebar-border overflow-hidden"
     >
@@ -109,7 +128,10 @@ export default function DashboardSidebar({
           return (
             <button
               key={item.id}
-              onClick={() => onNavigate(item.id)}
+              onClick={() => {
+                onNavigate(item.id)
+                if (mobile) onClose?.()
+              }}
               className={`
                 w-full flex items-center gap-3 px-3 py-2.5 rounded-sm transition-all duration-200
                 font-mono text-xs tracking-wider
@@ -138,6 +160,11 @@ export default function DashboardSidebar({
         })}
       </nav>
 
+      {/* Respaldo */}
+      <div className="px-2 py-2 border-t border-sidebar-border shrink-0">
+        <DashboardBackupControls sidebar collapsed={collapsed} />
+      </div>
+
       {/* Logout */}
       <div className="px-2 pt-2 border-t border-sidebar-border shrink-0">
         <form method="POST" action="/api/logout">
@@ -152,15 +179,15 @@ export default function DashboardSidebar({
         </form>
       </div>
 
-      {/* Collapse toggle */}
-      <div className="p-2 shrink-0">
+      {/* Colapsar (escritorio) o cerrar el cajón (móvil) */}
+      <div className={`p-2 shrink-0 ${lockCollapsed ? "hidden" : ""}`}>
         <button
-          onClick={onToggle}
+          onClick={mobile ? onClose : onToggle}
           className="w-full flex items-center justify-center gap-2 px-3 py-2 text-muted-foreground hover:text-foreground transition-colors font-mono text-xs"
         >
           <ChevronLeft
             className={`w-4 h-4 transition-transform duration-300 ${
-              collapsed ? "rotate-180" : ""
+              !mobile && collapsed ? "rotate-180" : ""
             }`}
           />
           <AnimatePresence mode="wait">
@@ -171,7 +198,7 @@ export default function DashboardSidebar({
                 exit={{ opacity: 0, x: -10 }}
                 transition={{ duration: 0.15 }}
               >
-                Colapsar
+                {mobile ? "Cerrar" : "Colapsar"}
               </motion.span>
             )}
           </AnimatePresence>

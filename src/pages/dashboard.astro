@@ -5,5 +5,11 @@ import DashboardLayout from '../components/react-islands/dashboard-layout.tsx'
 ---
 
 <Layout title="Dashboard | Efren">
-  <DashboardLayout client:load />
+  {/*
+    client:only — el dashboard se alimenta por completo de localStorage y de la
+    fecha local del navegador. Renderizarlo en el servidor produce HTML que
+    siempre difiere del cliente (datos por defecto y zona horaria del servidor),
+    lo que rompía la hidratación de React.
+  */}
+  <DashboardLayout client:only="react" />
 </Layout>

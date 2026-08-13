@@ -11,7 +11,14 @@ function daysSince(iso: string): number {
   return Math.floor((Date.now() - new Date(iso).getTime()) / (1000 * 60 * 60 * 24))
 }
 
-export default function DashboardBackupControls() {
+export default function DashboardBackupControls({
+  /** En el sidebar el espacio es estrecho: la etiqueta va sobre los botones. */
+  sidebar = false,
+  collapsed = false,
+}: {
+  sidebar?: boolean
+  collapsed?: boolean
+} = {}) {
   const { lastBackupAt, exportData, importData } = useDashboard()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [pendingImport, setPendingImport] = useState<unknown | null>(null)
@@ -52,30 +59,35 @@ export default function DashboardBackupControls() {
   }
 
   return (
-    <div className="flex items-center gap-4">
-      <span
-        className={`font-mono text-[10px] tracking-wider ${
-          isStale ? "text-white" : "text-muted-foreground"
-        }`}
-      >
-        {backupLabel}
-      </span>
+    <div className={sidebar ? "w-full" : "flex items-center gap-4"}>
+      {/* Colapsado no cabe texto: los iconos y su tooltip bastan. */}
+      {(!sidebar || !collapsed) && (
+        <span
+          className={`font-mono text-[10px] tracking-wider ${
+            sidebar ? "block px-3 mb-1 text-[9px] leading-tight" : ""
+          } ${isStale ? "text-white" : "text-muted-foreground"}`}
+        >
+          {backupLabel}
+        </span>
+      )}
 
-      <button
-        onClick={exportData}
-        title="Exportar respaldo JSON"
-        className="p-2 text-muted-foreground hover:text-white transition-colors"
-      >
-        <Download className="w-4 h-4" />
-      </button>
+      <div className={sidebar ? "flex items-center justify-center gap-1" : "contents"}>
+        <button
+          onClick={exportData}
+          title="Exportar respaldo JSON"
+          className="p-2 text-muted-foreground hover:text-white transition-colors"
+        >
+          <Download className="w-4 h-4" />
+        </button>
 
-      <button
-        onClick={() => fileInputRef.current?.click()}
-        title="Importar respaldo JSON"
-        className="p-2 text-muted-foreground hover:text-white transition-colors"
-      >
-        <Upload className="w-4 h-4" />
-      </button>
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          title="Importar respaldo JSON"
+          className="p-2 text-muted-foreground hover:text-white transition-colors"
+        >
+          <Upload className="w-4 h-4" />
+        </button>
+      </div>
       <input
         ref={fileInputRef}
         type="file"

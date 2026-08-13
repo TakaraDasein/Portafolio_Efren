@@ -5,29 +5,81 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber"
 import { useGLTF } from "@react-three/drei"
 import { MathUtils, Color, BufferAttribute, BufferGeometry as ThreeBufferGeometry } from "three"
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js"
+import { TessellateModifier } from "three/examples/jsm/modifiers/TessellateModifier.js"
 import type { Mesh, ShaderMaterial, BufferGeometry, Object3D } from "three"
-import PomodoroTimer from "./pomodoro-timer"
 
 const PERSON_MODEL_PATH = "/ilustraciones/persona.glb"
-const INITIAL_ZOOM = 4.2
 const MIN_ZOOM = 2.2
 const MAX_ZOOM = 6.5
-// The raw model isn't authored facing the camera; this offset rotates its resting pose to front-facing.
-const BASE_ROTATION_Y = Math.PI / 2
+/** Arranca en el acercamiento máximo: es la distancia donde la malla se lee mejor. */
+const INITIAL_ZOOM = MIN_ZOOM
 
-const MOODS = [
+/**
+ * Subdivisión de la malla, solo para modelos de poca densidad: con una malla ya
+ * detallada, teselar multiplicaría cientos de miles de triángulos sin ganancia
+ * visual y con un coste enorme. El umbral hace que se adapte sola al modelo
+ * que haya en `persona.glb`.
+ */
+const TESSELLATE_BELOW_TRIANGLES = 60_000
+const TESSELLATION_MAX_EDGE = 0.045
+const TESSELLATION_PASSES = 6
+
+/**
+ * Amplitud del desplazamiento de vértices del shader, en unidades del modelo ya
+ * escalado. Valores bajos mantienen la silueta legible; altos la deshacen.
+ */
+const NOISE_DISPLACEMENT = 0.005
+const SPARKLE_DISPLACEMENT = 0.01
+
+const CAMERA_Y = 0.1
+
+/**
+ * Altura de la figura en unidades de escena. Se normaliza por la caja
+ * envolvente y no por el radio de la esfera: con los brazos en cruz el radio lo
+ * marcaba la envergadura y el mismo valor daba tamaños muy distintos según el
+ * modelo. A este alto la figura entra entera en el encuadre inicial.
+ */
+const MODEL_TARGET_HEIGHT = 1.6
+
+/** Desplazamiento inicial; comparte variables con el arrastre del ratón. */
+const INITIAL_PAN_X = 0
+const INITIAL_PAN_Y = 0
+
+/**
+ * Recorrido máximo del arrastre. Más ancho en horizontal porque el lienzo lo es,
+ * y así se puede llevar la figura a un lado para despejar el centro.
+ */
+const PAN_LIMIT_X = 2.6
+const PAN_LIMIT_Y = 1.6
+
+/**
+ * Balanceo en reposo: la figura gira lentamente de un lado a otro sin dejar de
+ * mirar al frente, asomando algo de perfil en los extremos. Se suma sobre la
+ * rotación del usuario, así que arrastrarla no interrumpe el movimiento ni
+ * provoca saltos al soltar.
+ */
+const SWAY_DEGREES = 20
+const SWAY_SECONDS = 11
+// El modelo no viene mirando a cámara; esta rotación fija su pose de reposo.
+const BASE_ROTATION_Y = 0
+
+export const MOODS = [
   { id: "calma", label: "Calma", color: "#7dd3fc", intensity: 0.6 },
   { id: "enfoque", label: "Enfoque", color: "#ffffff", intensity: 0.4 },
   { id: "energia", label: "Energía", color: "#fb923c", intensity: 1.5 },
   { id: "misterio", label: "Misterio", color: "#a78bfa", intensity: 1.0 },
 ] as const
 
-type MoodId = (typeof MOODS)[number]["id"]
+export type MoodId = (typeof MOODS)[number]["id"]
 
-function normalizeMeshGeometry(mesh: Mesh): BufferGeometry {
+/**
+ * `keepIndex` solo es viable con una malla única: `mergeGeometries` exige que
+ * todas compartan el mismo criterio, y desindexar multiplica los vértices.
+ */
+function normalizeMeshGeometry(mesh: Mesh, keepIndex: boolean): BufferGeometry {
   let geo = mesh.geometry.clone()
   geo.applyMatrix4(mesh.matrixWorld)
-  if (geo.index) geo = geo.toNonIndexed()
+  if (geo.index && !keepIndex) geo = geo.toNonIndexed()
   if (!geo.getAttribute("normal")) geo.computeVertexNormals()
 
   const clean = new ThreeBufferGeometry()
@@ -47,32 +99,52 @@ function normalizeMeshGeometry(mesh: Mesh): BufferGeometry {
     clean.setAttribute("uv", new BufferAttribute(arr, 2))
   }
 
+  if (keepIndex && geo.index) clean.setIndex(geo.index)
+
   return clean
 }
 
 function buildGeometryFromModel(root: Object3D): BufferGeometry {
   root.updateWorldMatrix(true, true)
 
-  const parts: BufferGeometry[] = []
+  const meshes: Mesh[] = []
   root.traverse((child) => {
     const mesh = child as Mesh
-    if ((mesh as any).isMesh && mesh.geometry) {
-      parts.push(normalizeMeshGeometry(mesh))
-    }
+    if ((mesh as any).isMesh && mesh.geometry) meshes.push(mesh)
   })
 
-  const merged = parts.length > 0 ? mergeGeometries(parts, false) : null
-  if (!merged) {
+  if (meshes.length === 0) {
     throw new Error("No se encontraron mallas en el modelo persona.glb")
   }
 
+  // Con una sola malla no hace falta fusionar y se conserva su índice, lo que
+  // evita expandir los vértices (322k indexados pasarían a 1,5M sueltos).
+  const single = meshes.length === 1
+  const parts = meshes.map((mesh) => normalizeMeshGeometry(mesh, single))
+  const merged = single ? parts[0] : mergeGeometries(parts, false)!
+
   merged.center()
-  merged.computeBoundingSphere()
-  const radius = merged.boundingSphere?.radius || 1
-  const scaleFactor = 1.4 / radius
+  merged.computeBoundingBox()
+  const height = (merged.boundingBox?.max.y ?? 1) - (merged.boundingBox?.min.y ?? -1)
+  const scaleFactor = MODEL_TARGET_HEIGHT / (height || 1)
   merged.scale(scaleFactor, scaleFactor, scaleFactor)
 
-  return merged
+  const triangles = (merged.index?.count ?? merged.getAttribute("position").count) / 3
+  if (triangles >= TESSELLATE_BELOW_TRIANGLES) {
+    merged.computeBoundingSphere()
+    return merged
+  }
+
+  // Se tesela después de escalar: `maxEdgeLength` se mide en las unidades finales.
+  const detailed = new TessellateModifier(
+    TESSELLATION_MAX_EDGE,
+    TESSELLATION_PASSES,
+  ).modify(merged)
+
+  detailed.computeVertexNormals()
+  detailed.computeBoundingSphere()
+
+  return detailed
 }
 
 useGLTF.preload(PERSON_MODEL_PATH)
@@ -90,7 +162,8 @@ function Figure({
   const [isDragging, setIsDragging] = useState(false)
   const dragModeRef = useRef<"rotate" | "pan" | null>(null)
   const rotationRef = useRef({ x: 0, y: BASE_ROTATION_Y })
-  const panYRef = useRef(0)
+  const panXRef = useRef(INITIAL_PAN_X)
+  const panYRef = useRef(INITIAL_PAN_Y)
   const previousPointer = useRef({ x: 0, y: 0 })
   const zoomRef = useRef(INITIAL_ZOOM)
   const targetColorRef = useRef(new Color(accentColor))
@@ -186,7 +259,6 @@ function Figure({
     uniform float uIntensity;
     varying vec2 vUv;
     varying float vDisplacement;
-    varying float vSparkle;
 
     float random(vec2 st) {
       return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453123);
@@ -247,9 +319,84 @@ function Figure({
       vUv = uv;
 
       float noise = snoise(position * 2.2 + uTime * 0.15);
-      float displacement = noise * 0.035 * uIntensity;
+      float displacement = noise * ${NOISE_DISPLACEMENT} * uIntensity;
       vDisplacement = displacement;
 
+      vec3 newPosition = position + normal * displacement;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
+    }
+  `
+
+  /*
+   * Los destellos se calculan aquí y no en el vértice a propósito: con
+   * `wireframe` el shader de vértices corre 6 veces por triángulo (una por
+   * extremo de cada arista), así que con medio millón de triángulos eran 3M de
+   * invocaciones por frame, cada una con cuatro ruidos simplex. Las aristas
+   * cubren pocos píxeles, de modo que en el fragmento sale mucho más barato.
+   */
+  const fragmentShader = `
+    uniform float uTime;
+    uniform vec3 uAccentColor;
+    uniform float uIntensity;
+    varying vec2 vUv;
+    varying float vDisplacement;
+
+    float random(vec2 st) {
+      return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453123);
+    }
+
+    vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+    vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+    vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }
+    vec4 taylorInvSqrt(vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
+
+    float snoise(vec3 v) {
+      const vec2 C = vec2(1.0/6.0, 1.0/3.0);
+      const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);
+      vec3 i = floor(v + dot(v, C.yyy));
+      vec3 x0 = v - i + dot(i, C.xxx);
+      vec3 g = step(x0.yzx, x0.xyz);
+      vec3 l = 1.0 - g;
+      vec3 i1 = min(g.xyz, l.zxy);
+      vec3 i2 = max(g.xyz, l.zxy);
+      vec3 x1 = x0 - i1 + C.xxx;
+      vec3 x2 = x0 - i2 + C.yyy;
+      vec3 x3 = x0 - D.yyy;
+      i = mod289(i);
+      vec4 p = permute(permute(permute(
+        i.z + vec4(0.0, i1.z, i2.z, 1.0))
+        + i.y + vec4(0.0, i1.y, i2.y, 1.0))
+        + i.x + vec4(0.0, i1.x, i2.x, 1.0));
+      float n_ = 0.142857142857;
+      vec3 ns = n_ * D.wyz - D.xzx;
+      vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
+      vec4 x_ = floor(j * ns.z);
+      vec4 y_ = floor(j - 7.0 * x_);
+      vec4 x = x_ *ns.x + ns.yyyy;
+      vec4 y = y_ *ns.x + ns.yyyy;
+      vec4 h = 1.0 - abs(x) - abs(y);
+      vec4 b0 = vec4(x.xy, y.xy);
+      vec4 b1 = vec4(x.zw, y.zw);
+      vec4 s0 = floor(b0)*2.0 + 1.0;
+      vec4 s1 = floor(b1)*2.0 + 1.0;
+      vec4 sh = -step(h, vec4(0.0));
+      vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy;
+      vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww;
+      vec3 p0 = vec3(a0.xy, h.x);
+      vec3 p1 = vec3(a0.zw, h.y);
+      vec3 p2 = vec3(a1.xy, h.z);
+      vec3 p3 = vec3(a1.zw, h.w);
+      vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2,p2), dot(p3,p3)));
+      p0 *= norm.x;
+      p1 *= norm.y;
+      p2 *= norm.z;
+      p3 *= norm.w;
+      vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+      m = m * m;
+      return 42.0 * dot(m*m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3)));
+    }
+
+    void main() {
       vec2 sparkleCell = floor(vUv * 13.0);
       float sparklePattern = random(sparkleCell);
       float sparkleSpeed = mix(0.22, 0.55, sparklePattern);
@@ -276,34 +423,14 @@ function Figure({
                           (sin(uTime * edgeSpeed + vUv.x * 10.0 + sparklePattern * 20.0) * 0.5 + 0.5);
 
       float totalSparkle = max(sparkle, edgeSparkle * 0.44) * uIntensity;
-      vSparkle = totalSparkle;
 
-      float sparkleDeform = totalSparkle * 0.08;
-
-      vec3 newPosition = position + normal * (displacement + sparkleDeform);
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
-    }
-  `
-
-  const fragmentShader = `
-    uniform float uTime;
-    uniform vec3 uAccentColor;
-    uniform float uIntensity;
-    varying vec2 vUv;
-    varying float vDisplacement;
-    varying float vSparkle;
-
-    void main() {
       float intensity = 0.4 + vDisplacement * 4.0;
       vec3 baseColor = vec3(intensity) * vec3(0.72, 0.85, 1.0);
 
       float line = smoothstep(0.0, 0.02, abs(fract(vUv.x * 20.0) - 0.5));
       line *= smoothstep(0.0, 0.02, abs(fract(vUv.y * 20.0) - 0.5));
 
-      float totalSparkle = vSparkle;
-
       vec3 finalColor = mix(baseColor, uAccentColor, clamp(totalSparkle * 0.92, 0.0, 1.0));
-
       finalColor = finalColor * (1.0 - line * 0.5);
 
       gl_FragColor = vec4(finalColor, clamp(0.5 * uIntensity + 0.14 + totalSparkle * 0.36, 0.15, 1.0));
@@ -340,17 +467,26 @@ function Figure({
 
         previousPointer.current = { x: pointer.x, y: pointer.y }
 
-        meshRef.current.rotation.x = rotationRef.current.x
-        meshRef.current.rotation.y = rotationRef.current.y
       } else if (isDragging && dragModeRef.current === "pan") {
+        // Arrastre en los dos ejes: antes solo seguía el vertical.
+        const deltaX = (pointer.x - previousPointer.current.x) * 2.5
         const deltaY = (pointer.y - previousPointer.current.y) * 2.5
-        panYRef.current = MathUtils.clamp(panYRef.current + deltaY, -1.6, 1.6)
+        panXRef.current = MathUtils.clamp(panXRef.current + deltaX, -PAN_LIMIT_X, PAN_LIMIT_X)
+        panYRef.current = MathUtils.clamp(panYRef.current + deltaY, -PAN_LIMIT_Y, PAN_LIMIT_Y)
 
         previousPointer.current = { x: pointer.x, y: pointer.y }
 
+        meshRef.current.position.x = panXRef.current
         meshRef.current.position.y = panYRef.current
       }
-      // Static otherwise: the figure only moves when the user drags or pans it.
+
+      // El vaivén se aplica siempre, sobre la orientación elegida por el usuario.
+      const sway =
+        Math.sin((state.clock.elapsedTime * Math.PI * 2) / SWAY_SECONDS) *
+        MathUtils.degToRad(SWAY_DEGREES)
+
+      meshRef.current.rotation.x = rotationRef.current.x
+      meshRef.current.rotation.y = rotationRef.current.y + sway
     }
   })
 
@@ -400,6 +536,7 @@ function Figure({
       ref={meshRef}
       geometry={geometry}
       rotation={[0, BASE_ROTATION_Y, 0]}
+      position={[INITIAL_PAN_X, INITIAL_PAN_Y, 0]}
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
       onPointerMove={handlePointerMove}
@@ -416,9 +553,18 @@ function Figure({
   )
 }
 
-export function SentientFigure({ accentColor = "#7dd3fc" }: { accentColor?: string }) {
+/**
+ * El estado de ánimo se controla desde fuera (ver `figure-controls.tsx`): sus
+ * botones vivían anclados al pie del lienzo y en móvil quedaban cortados.
+ */
+export function SentientFigure({
+  accentColor = "#7dd3fc",
+  moodId = null,
+}: {
+  accentColor?: string
+  moodId?: MoodId | null
+}) {
   const [mounted, setMounted] = useState(false)
-  const [moodId, setMoodId] = useState<MoodId | null>(null)
 
   useEffect(() => {
     setMounted(true)
@@ -435,10 +581,10 @@ export function SentientFigure({ accentColor = "#7dd3fc" }: { accentColor?: stri
   }
 
   return (
-    <div className="relative w-full h-full flex flex-col">
-      <div className="flex-1 min-h-0">
+    <div className="relative w-full h-full">
+      <div className="w-full h-full">
         <Canvas
-          camera={{ position: [0, 0.1, INITIAL_ZOOM], fov: 45 }}
+          camera={{ position: [0, CAMERA_Y, INITIAL_ZOOM], fov: 45 }}
           className="w-full my-0 h-full py-0"
           dpr={[1, 2]}
           gl={{
@@ -452,27 +598,6 @@ export function SentientFigure({ accentColor = "#7dd3fc" }: { accentColor?: stri
             <Figure accentColor={activeMood?.color ?? accentColor} intensity={activeMood?.intensity ?? 1} />
           </Suspense>
         </Canvas>
-      </div>
-
-      <div className="shrink-0 pt-2 flex flex-col items-center gap-1.5">
-        <PomodoroTimer />
-        <div className="flex flex-wrap items-center justify-center gap-1.5">
-          {MOODS.map((m) => (
-            <button
-              key={m.id}
-              type="button"
-              onClick={() => setMoodId((prev) => (prev === m.id ? null : m.id))}
-              className={`px-2.5 py-1 rounded-full border font-mono text-[9px] tracking-wider uppercase transition-colors ${
-                moodId === m.id
-                  ? "text-white"
-                  : "border-white/10 text-muted-foreground/70 hover:border-white/25 hover:text-muted-foreground"
-              }`}
-              style={moodId === m.id ? { borderColor: m.color, backgroundColor: `${m.color}1a` } : undefined}
-            >
-              {m.label}
-            </button>
-          ))}
-        </div>
       </div>
     </div>
   )
