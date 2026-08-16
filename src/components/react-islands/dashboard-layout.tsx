@@ -137,7 +137,7 @@ function DashboardShell() {
           Sin barra superior: duplicaba el sidebar y la fecha que ya muestra el
           reloj del panel. Los controles de respaldo viven ahora en el sidebar.
         */}
-        <main className="p-4 pt-16 md:p-8">
+        <main className="p-4 pt-16 md:pt-4 lg:p-8">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeView}

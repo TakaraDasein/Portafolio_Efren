@@ -19,6 +19,21 @@ export default function Hero() {
   const [sphereColor, setSphereColor] = useState("#ffffff")
   const [controlVisible, setControlVisible] = useState(false)
   const [photoHovered, setPhotoHovered] = useState(false)
+  const [leaving, setLeaving] = useState(false)
+
+  /**
+   * Salida hacia /perfil: la interfaz del hero se desvanece y la esfera crece
+   * hasta ocupar el encuadre, de modo que la página de perfil arranca con la
+   * figura 3D en el mismo punto y el corte se lee como una transformación.
+   */
+  const goToProfile = (e: React.MouseEvent) => {
+    e.preventDefault()
+    if (leaving) return
+    setLeaving(true)
+    window.setTimeout(() => {
+      window.location.href = "/perfil"
+    }, 900)
+  }
 
   const buttonColors: Record<string, string> = {
     "data-analysis": "#39cbe3",
@@ -148,9 +163,20 @@ export default function Hero() {
       <DataParticles color={activeColor} />
       
       {/* 3D Sphere - Background en móvil, Foreground en desktop */}
-      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] sm:w-[400px] sm:h-[400px] md:w-[450px] md:h-[450px] lg:w-[500px] lg:h-[500px] xl:w-[600px] xl:h-[600px] 2xl:w-[700px] 2xl:h-[700px] z-0 xl:z-50 opacity-70 xl:opacity-100 pointer-events-auto overflow-visible">
+      <motion.div
+        /* x/y sustituyen a `-translate-*`: framer-motion reescribe el transform
+           completo al animar la escala y las clases de Tailwind se perderían. */
+        initial={{ x: "-50%", y: "-50%", scale: 1, opacity: 1 }}
+        animate={
+          leaving
+            ? { x: "-50%", y: "-50%", scale: 1.6, opacity: 0 }
+            : { x: "-50%", y: "-50%", scale: 1, opacity: 1 }
+        }
+        transition={{ duration: 0.9, ease: [0.65, 0, 0.35, 1] }}
+        className="absolute left-1/2 top-1/2 w-[350px] h-[350px] sm:w-[400px] sm:h-[400px] md:w-[450px] md:h-[450px] lg:w-[500px] lg:h-[500px] xl:w-[600px] xl:h-[600px] 2xl:w-[700px] 2xl:h-[700px] z-0 xl:z-50 opacity-70 xl:opacity-100 pointer-events-auto overflow-visible"
+      >
         <SentientSphere accentColor={activeColor} />
-      </div>
+      </motion.div>
 
       {/* ── Palette toggle button ── */}
       <button
@@ -159,7 +185,9 @@ export default function Hero() {
         onClick={() => setControlVisible((v) => !v)}
         aria-label="Mostrar/ocultar paleta de colores"
         aria-pressed={controlVisible}
-        className="absolute bottom-8 right-8 z-50 flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-black/70 backdrop-blur-xl shadow-2xl shadow-black/60 transition-colors hover:border-white/30"
+        className={`absolute bottom-8 right-8 z-50 flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-black/70 backdrop-blur-xl shadow-2xl shadow-black/60 transition-all duration-500 hover:border-white/30 ${
+          leaving ? "pointer-events-none opacity-0" : "opacity-100"
+        }`}
       >
         <Palette className="h-5 w-5" style={{ color: controlVisible ? activeColor : "rgba(255,255,255,0.7)" }} />
       </button>
@@ -233,6 +261,13 @@ export default function Hero() {
 
       {/* Typography Overlay */}
       <motion.div
+        /* Capa aparte para la salida: el hijo ya tiene `opacity` y `scale`
+           atados al scroll y animarlos aquí se pisaría con aquello. */
+        animate={{ opacity: leaving ? 0 : 1 }}
+        transition={{ duration: 0.55, ease: "easeIn" }}
+        className="absolute inset-0 z-10"
+      >
+      <motion.div
         style={{ opacity, scale }}
         className="relative z-10 h-full flex flex-col justify-center xl:justify-between p-6 sm:p-8 md:px-12 lg:px-16 xl:px-24 pt-24 sm:pt-28 md:py-16 lg:py-20 pointer-events-none"
       >
@@ -245,7 +280,13 @@ export default function Hero() {
               transition={{ duration: 1, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
               className="relative group"
             >
-              <a href="https://www.kaggle.com" target="_blank" rel="noopener noreferrer" data-cursor-hover>
+              <a
+                href="/perfil"
+                onClick={goToProfile}
+                aria-label="Ver mi perfil y trayectoria"
+                title="Ver mi perfil y trayectoria"
+                data-cursor-hover
+              >
                 <div className="relative w-[160px] h-[160px] sm:w-[180px] sm:h-[180px] md:w-[220px] md:h-[220px] lg:w-[260px] lg:h-[260px] xl:w-[300px] xl:h-[300px] cursor-pointer">
                   <img
                     src="/profile-photo.png"
@@ -263,6 +304,13 @@ export default function Hero() {
                     onMouseLeave={() => setPhotoHovered(false)}
                   />
                 </div>
+                {/* Pista de que la foto es la entrada al perfil */}
+                <span
+                  className="mt-1 block text-center font-mono text-[9px] uppercase tracking-[0.25em] transition-colors duration-500 xl:text-left"
+                  style={{ color: photoHovered ? activeColor : "rgba(255,255,255,0.25)" }}
+                >
+                  Ver perfil ↗
+                </span>
               </a>
             </motion.div>
 
@@ -414,11 +462,12 @@ export default function Hero() {
         ></motion.div>
 
       </motion.div>
+      </motion.div>
 
       <motion.div
         initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.5 }}
+        animate={{ opacity: leaving ? 0 : 1 }}
+        transition={{ delay: leaving ? 0 : 1.5, duration: leaving ? 0.4 : 0.6 }}
         className="hidden xl:block absolute bottom-8 left-1/2 -translate-x-1/2 z-20"
       >
         <motion.div

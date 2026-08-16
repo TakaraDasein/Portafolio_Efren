@@ -95,13 +95,13 @@ export default function DashboardHome({ onNavigate }: Partial<DashboardViewProps
         Altura mínima, no fija: en pantallas estrechas la columna de tarjetas
         es más alta que el hero y se derramaba sobre la sección siguiente.
       */}
-      <div className="relative min-h-[620px] md:min-h-[860px] -mt-16 md:-mt-8 -mx-4 md:-mx-8 pb-4">
+      <div className="relative min-h-[620px] lg:min-h-[860px] -mt-16 md:-mt-4 lg:-mt-8 -mx-4 lg:-mx-8 pb-4">
         <div className="absolute inset-0">
           <SentientFigure accentColor="#7dd3fc" moodId={moodId} />
         </div>
 
         {/* Encabezado + tira semanal */}
-        <div className="relative z-20 pt-16 md:pt-8 px-4 md:px-8 pointer-events-none space-y-5">
+        <div className="relative z-20 pt-16 md:pt-4 lg:pt-8 px-4 lg:px-8 pointer-events-none space-y-5">
           <div className="pointer-events-auto">
             <h1 className="font-sans text-4xl font-light tracking-tight">
               Panel de <span className="italic text-white">Control</span>
@@ -111,7 +111,7 @@ export default function DashboardHome({ onNavigate }: Partial<DashboardViewProps
             </p>
           </div>
 
-          <div className="pointer-events-auto inline-block bg-background/70 backdrop-blur-md border border-white/10 rounded-xl p-3 max-w-full">
+          <div className="pointer-events-auto block w-full max-w-md lg:inline-block lg:w-auto lg:max-w-full bg-background/70 backdrop-blur-md border border-white/10 rounded-xl p-3">
             <div className="flex items-center justify-between gap-6 mb-2">
               <span className="font-mono text-[9px] text-muted-foreground tracking-wider uppercase">
                 Esta semana
@@ -167,7 +167,7 @@ export default function DashboardHome({ onNavigate }: Partial<DashboardViewProps
           </div>
 
           {/* Reloj con su agenda y el pad, bajo el calendario */}
-          <div className="pointer-events-auto flex flex-col gap-3 w-[17.5rem]">
+          <div className="pointer-events-auto flex flex-col gap-3 w-full max-w-md lg:w-[17.5rem] lg:max-w-none">
             <DashboardClock onNavigate={onNavigate && (() => onNavigate("routines"))} />
             <DashboardPad onNavigate={onNavigate && (() => onNavigate("notebook"))} />
             <FigureControls moodId={moodId} onMoodChange={setMoodId} />

@@ -14,7 +14,10 @@ function SplashCursor({
   SPLAT_FORCE = 6000,
   SHADING = true,
   COLOR_UPDATE_SPEED = 10,
-  BACK_COLOR = { r: 0, g: 0, b: 1 },
+  // Blanco grisáceo por defecto. El azul anterior teñía el efecto en cualquier
+  // página que no fijara `--cursor-color`, que es la variable con la que cada
+  // sección decide su propio acento.
+  BACK_COLOR = { r: 0.9, g: 0.9, b: 0.93 },
   TRANSPARENT = true
 }) {
   const canvasRef = useRef(null);

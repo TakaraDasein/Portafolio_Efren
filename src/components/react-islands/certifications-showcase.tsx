@@ -160,7 +160,7 @@ const contentByTab: Record<CredentialCategory, CredentialItem[]> = {
 }
 
 export default function CertificationsShowcase() {
-  const [activeTab, setActiveTab] = useState<CredentialCategory>("diplomas")
+  const [activeTab, setActiveTab] = useState<CredentialCategory>("certificaciones")
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
   const [carouselOpen, setCarouselOpen] = useState(false)
   const [carouselIndex, setCarouselIndex] = useState(0)

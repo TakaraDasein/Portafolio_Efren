@@ -64,7 +64,7 @@ export default function DashboardPad({ onNavigate }: { onNavigate?: () => void }
       initial={{ opacity: 0, x: 16 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.5, delay: 0.25 }}
-      className="w-[17.5rem] bg-background/70 backdrop-blur-md border border-white/10 rounded-xl hover:border-white/25 transition-colors"
+      className="w-full lg:w-[17.5rem] bg-background/70 backdrop-blur-md border border-white/10 rounded-xl hover:border-white/25 transition-colors"
     >
       <div className="flex items-center gap-2 px-4 pt-3 pb-2">
         <NotebookPen className="w-3.5 h-3.5 text-white shrink-0" />

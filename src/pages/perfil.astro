@@ -1,0 +1,75 @@
+---
+import Layout from '../layouts/Layout.astro'
+import ProfileJourney from '../components/react-islands/profile-journey.tsx'
+---
+
+<Layout
+  title="Perfil | Alvaro Efren Bolaños Scalante"
+  description="Trayectoria de Alvaro Efren Bolaños Scalante: politólogo con enfoque en análisis y ciencia de datos en contextos sociales, institucionales, humanitarios y ambientales."
+>
+  {/*
+    client:only — la figura 3D lee el tamaño del lienzo y GSAP mide posiciones
+    del DOM ya pintado; el HTML del servidor no aporta nada útil aquí y provoca
+    un salto al hidratar.
+  */}
+  <ProfileJourney client:only="react" />
+</Layout>
+
+<style is:global>
+  /*
+    Recorrido de capítulo en capítulo: `mandatory` obliga a que el scroll acabe
+    siempre sobre una sección, nunca entre dos.
+  */
+  html {
+    scroll-snap-type: y mandatory;
+    scroll-behavior: smooth;
+  }
+
+  /*
+    `scroll-snap-stop: always` es lo que convierte un gesto en un capítulo: sin
+    él, un golpe de rueda largo o un swipe con inercia se salta varias secciones
+    de una vez.
+  */
+  /*
+    La zona de vista libre encaja igual que un capítulo. Sin esto el navegador
+    no la admite como punto de reposo —con `mandatory` siempre tiene que caer
+    sobre uno— y deshace el gesto devolviendo la página al cierre.
+  */
+  [data-chapter],
+  [data-free-look] {
+    scroll-snap-align: center;
+    scroll-snap-stop: always;
+  }
+
+  /*
+    Una sección más alta que la ventana no se puede centrar: al hacerlo, su
+    principio y su final quedan fuera de pantalla y son inalcanzables. Esas se
+    alinean por arriba y se recorren por dentro.
+  */
+  @media (max-height: 780px), (max-width: 1279px) {
+    [data-chapter],
+    [data-free-look] {
+      scroll-snap-align: start;
+    }
+  }
+
+  .gsap-word {
+    will-change: opacity;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-snap-type: none;
+      scroll-behavior: auto;
+    }
+
+    [data-chapter],
+    [data-free-look] {
+      scroll-snap-stop: normal;
+    }
+
+    .gsap-word {
+      will-change: auto;
+    }
+  }
+</style>

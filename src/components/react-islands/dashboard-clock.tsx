@@ -58,7 +58,7 @@ export default function DashboardClock({ onNavigate }: { onNavigate?: () => void
 
   // Evita desajustes de render: el reloj solo existe una vez montado en cliente.
   if (!now) {
-    return <div className="w-[17.5rem] h-[12rem] border border-white/10 rounded-xl bg-background/70" />
+    return <div className="w-full lg:w-[17.5rem] h-[12rem] border border-white/10 rounded-xl bg-background/70" />
   }
 
   const todayIso = toISODate(now)
@@ -121,7 +121,7 @@ export default function DashboardClock({ onNavigate }: { onNavigate?: () => void
       initial={{ opacity: 0, x: 16 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.5, delay: 0.1 }}
-      className="relative w-[17.5rem] bg-background/70 backdrop-blur-md border border-white/10 rounded-xl hover:border-white/25 transition-colors"
+      className="relative w-full lg:w-[17.5rem] bg-background/70 backdrop-blur-md border border-white/10 rounded-xl hover:border-white/25 transition-colors"
     >
       {/* Display */}
       <div className="px-5 pt-4 pb-3 flex flex-col items-center bg-white/[0.02] rounded-t-xl">

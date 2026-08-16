@@ -24,7 +24,9 @@ const {
 } = Astro.props
 
 const pathname = Astro.url.pathname;
-let backColor = { r: 0, g: 0, b: 1 }; // blue
+// Blanco grisáceo: es el acento neutro del sitio. Solo las secciones con
+// identidad cromática propia lo sustituyen.
+let backColor = { r: 0.9, g: 0.9, b: 0.93 };
 const showParticles = !pathname.includes('machine-learning'); // No mostrar partículas en ML
 if (pathname.includes('machine-learning')) {
   backColor = { r: 1, g: 0, b: 0 }; // red

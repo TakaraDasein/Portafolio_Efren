@@ -21,24 +21,12 @@ const areaLinks = [
   { label: "Medio Ambiente y Sociedad", href: "/medio-ambiente-sociedad", color: "#10b981" },
 ]
 export default function Navbar() {
-  const [isScrolled, setIsScrolled] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [dashboardOpacity, setDashboardOpacity] = useState(0)
   const dashboardButtonRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50)
-    }
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
-
-  useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({ x: e.clientX, y: e.clientY })
-      
       if (dashboardButtonRef.current) {
         const rect = dashboardButtonRef.current.getBoundingClientRect()
         const distance = Math.sqrt(
@@ -70,25 +58,11 @@ export default function Navbar() {
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-          isScrolled ? "bg-background/80 backdrop-blur-md border-b border-border" : ""
-        }`}
+        className="fixed top-0 left-0 right-0 z-50 pointer-events-none"
       >
-        <nav className="flex items-center justify-between px-6 py-4 my-0 md:px-12 md:py-5 text-primary">
-          {/* Logo */}
-          <a
-            href="#"
-            onClick={(e) => {
-              e.preventDefault()
-              window.scrollTo({ top: 0, behavior: "smooth" })
-            }}
-            className="group flex items-center gap-2"
-          >
-          </a>
-
+        <nav className="flex items-center justify-end px-6 py-4 my-0 md:px-12 md:py-5 text-primary">
           {/* Desktop Navigation */}
-
-          <div className="hidden xl:flex items-center gap-6">
+          <div className="hidden xl:flex items-center gap-6 pointer-events-auto">
             <div
               ref={dashboardButtonRef}
               style={{ opacity: dashboardOpacity }}
@@ -113,7 +87,7 @@ export default function Navbar() {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="xl:hidden relative w-8 h-8 flex flex-col items-center justify-center gap-1.5"
+            className="xl:hidden relative w-8 h-8 flex flex-col items-center justify-center gap-1.5 pointer-events-auto"
             aria-label="Toggle menu"
           >
             <motion.span
