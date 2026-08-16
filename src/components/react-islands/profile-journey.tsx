@@ -4,6 +4,7 @@ import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { gsap } from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
+import { ASCII_PRESETS, type AsciiPresetId } from "./ascii-pass"
 import { ASCENDING_ORBIT, SentientFigure } from "./sentient-figure"
 import { EXPERIENCES, PROFILE, PROFILE_STATEMENTS } from "./profile-data"
 
@@ -139,6 +140,18 @@ export default function ProfileJourney() {
    * pasa a seguir al cursor. Se sale volviendo a subir.
    */
   const [freeLook, setFreeLook] = useState(false)
+  /**
+   * Banco de pruebas del acabado en caracteres: `?ascii=braille`, `?ascii=digits`,
+   * `?ascii=blocks` o `?ascii=stipple` cambian la familia de símbolos sin tocar
+   * el estilo por defecto. Se lee en un efecto y no durante el render porque la
+   * página se genera también en el servidor, donde no existe `window`.
+   */
+  const [asciiPreset, setAsciiPreset] = useState<AsciiPresetId>("ink")
+
+  useEffect(() => {
+    const value = new URLSearchParams(window.location.search).get("ascii")
+    if (value && value in ASCII_PRESETS) setAsciiPreset(value as AsciiPresetId)
+  }, [])
 
   /**
    * Progreso 0–1 del recorrido completo. Se guarda en una ref y no en estado:
@@ -435,9 +448,17 @@ export default function ProfileJourney() {
               progressRef={progressRef}
               scale={FIGURE_SCALE}
               texture="ascii"
+              asciiPreset={asciiPreset}
+              monochrome
               distortion={0.22}
               pointerDeform={1}
-              particles={1400}
+              /*
+               * Subido de 1400 al pasar el fondo a un anillo de 24 distritos:
+               * el presupuesto de puntos se reparte entre todos, y con el valor
+               * anterior cada agrupación se quedaba en unas decenas de puntos,
+               * demasiado escasa para leerse como densidad.
+               */
+              particles={3000}
               freeLook={freeLook}
             />
           )}
@@ -728,7 +749,6 @@ export default function ProfileJourney() {
                     src={exp.logo}
                     alt={exp.org}
                     className="h-64 w-auto max-w-full transition-transform duration-500 group-hover:scale-105 md:h-[26rem] xl:h-[34rem]"
-                    style={{ filter: "drop-shadow(0 24px 60px rgba(255,255,255,0.14))" }}
                   />
                 </motion.a>
 
@@ -790,7 +810,6 @@ export default function ProfileJourney() {
                           src={exp.logo}
                           alt=""
                           className="h-16 w-auto transition-transform duration-500 hover:scale-110 md:h-24"
-                          style={{ filter: "drop-shadow(0 8px 20px rgba(255,255,255,0.14))" }}
                         />
                       </motion.a>
                     )}

@@ -3,7 +3,7 @@
 import { useRef, useMemo, useEffect, useState, Suspense } from "react"
 import { Canvas, useFrame, useThree } from "@react-three/fiber"
 import { useGLTF } from "@react-three/drei"
-import { AsciiPass } from "./ascii-pass"
+import { AsciiPass, type AsciiPresetId } from "./ascii-pass"
 import {
   MathUtils,
   Color,
@@ -78,6 +78,15 @@ export const MOODS = [
 ] as const
 
 export type MoodId = (typeof MOODS)[number]["id"]
+
+/**
+ * Color del fondo lejano. Es un azul muy oscuro y desaturado, no negro: contra
+ * el negro puro de la página lo lejano desaparecería del todo y la escena
+ * perdería su plano más profundo. Al virar hacia él, la distancia se lee como
+ * perspectiva aérea —lo lejano se enfría y pierde contraste— en vez de como un
+ * simple desvanecido.
+ */
+const FAR_COLOR = "#101d33"
 
 /**
  * `keepIndex` solo es viable con una malla única: `mergeGeometries` exige que
@@ -229,7 +238,7 @@ export const ASCENDING_ORBIT: CameraKey[] = [
    */
   { azimuth: 12, elevation: 5, radius: 0.26, target: BODY.cabeza, frameX: 0.52, label: "Primer plano" },
   { azimuth: 34, elevation: -11, radius: 0.30, target: BODY.rostro, frameX: 0.42, label: "Contrapicado tres cuartos" },
-  { azimuth: -46, elevation: 7, radius: 0.26, target: BODY.rostro, frameX: -0.42, label: "Tres cuartos derecho" },
+  { azimuth: -46, elevation: 7, radius: 0.35, target: BODY.rostro, frameX: -0.42, label: "Tres cuartos derecho" },
   { azimuth: 52, elevation: -5, radius: 0.36, target: BODY.rostro, frameX: 0.42, label: "Perfil izquierdo" },
   // V1TR0 y la pausa intercambiaron su lugar en el recorrido; sus claves van
   // con ellos para que cada capítulo conserve el encuadre con el que se diseñó.
@@ -243,11 +252,350 @@ export const ASCENDING_ORBIT: CameraKey[] = [
 ]
 
 /**
+ * Generador determinista. La disposición de los distritos y de las ramas se
+ * sortea, pero debe salir idéntica en cada montaje: con `Math.random` el fondo
+ * cambiaba entre recargas y entre servidor y cliente, y lo que se diseña como
+ * un emplazamiento concreto detrás del hombro dejaba de estar ahí.
+ */
+function seededRandom(seed: number) {
+  let s = seed >>> 0
+  return () => {
+    s = (s + 0x6d2b79f5) >>> 0
+    let t = Math.imul(s ^ (s >>> 15), 1 | s)
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+}
+
+/**
+ * Emplazamiento de cada distrito, en las mismas coordenadas esféricas que el
+ * recorrido de cámara para poder razonar los dos juntos.
+ *
+ * La relación entre cámara y fondo se resume en una regla: una cámara situada
+ * en el azimut A deja en cuadro el fondo centrado en A+180. Es lo que decide
+ * qué distritos se ven en cada plano del recorrido.
+ *
+ * `radius` va en múltiplos de la altura de la figura, igual que en `CameraKey`,
+ * de modo que el fondo escala con el personaje y no hay que reajustarlo al
+ * cambiar `FIGURE_SCALE`.
+ */
+type District = {
+  azimuth: number
+  elevation: number
+  radius: number
+  /** Radio de la nube, en múltiplos de la altura de la figura. */
+  spread: number
+  /** Peso relativo en el reparto de puntos: es la "densidad" del distrito. */
+  weight: number
+}
+
+/** Número de distritos del anillo. Reparte el presupuesto de puntos. */
+const DISTRICT_COUNT = 52
+
+/**
+ * Esfera de distritos alrededor de la figura, generada en vez de escrita a
+ * mano. Con una lista literal había que ir tapando planos vacíos de uno en uno
+ * —y siempre quedaba alguno—; generándola, la cobertura de los 360° está
+ * garantizada por construcción.
+ *
+ * El reparto es una **espiral de Fibonacci**, que es la construcción estándar
+ * para distribuir puntos uniformemente sobre una esfera. La clave está en de
+ * dónde sale la elevación: la altura `y` avanza de forma lineal entre los polos
+ * y el azimut gira con el ángulo áureo. Como en una esfera las franjas de igual
+ * altura tienen igual área, un `y` uniforme reparte los puntos por área y no
+ * por ángulo, que es justo lo que hace que no se apelotonen.
+ *
+ * La versión anterior sacaba el azimut del ángulo áureo pero la elevación de
+ * una onda senoidal, y ahí estaba el defecto: una senoidal pasa más tiempo
+ * cerca de sus extremos que del centro, así que los distritos se acumulaban en
+ * dos bandas de altura y dejaban el resto despejado. Se veían juntos porque lo
+ * estaban.
+ *
+ * La densidad sí sigue sesgada hacia atrás. `ASCENDING_ORBIT` mantiene la
+ * cámara dentro de ±55°, de modo que el hemisferio frontal solo entra en cuadro
+ * en la vista libre; los distritos existen ahí —la esfera es completa— pero con
+ * menos peso, para no gastar puntos donde casi no se miran.
+ */
+const DISTRICTS: District[] = (() => {
+  const rand = seededRandom(0xd157)
+  const list: District[] = []
+  // Ángulo áureo en radianes: la vuelta que nunca cierra ciclo, y por eso no
+  // produce alineaciones visibles al orbitar.
+  const GOLDEN = Math.PI * (3 - Math.sqrt(5))
+
+  for (let i = 0; i < DISTRICT_COUNT; i++) {
+    // El medio punto de desplazamiento evita colocar un distrito exactamente en
+    // cada polo, donde quedaría justo encima y debajo de la cabeza.
+    const y = 1 - ((i + 0.5) / DISTRICT_COUNT) * 2
+    const azimuth = (((GOLDEN * i * 180) / Math.PI) % 360 + 360) % 360
+    // 0 de frente, 1 justo detrás: mide cuánto se mira esa dirección.
+    const backness = (1 - Math.cos((azimuth * Math.PI) / 180)) / 2
+
+    list.push({
+      azimuth,
+      // Achatado a 0.8: la figura es alta y estrecha, y la esfera entera dejaba
+      // demasiados distritos en la vertical, fuera de cuadro en casi todos los
+      // planos.
+      elevation: (Math.asin(y) * 180) / Math.PI * 0.8,
+      // Banda de profundidad ancha y sin relación con la dirección: es el
+      // segundo eje de dispersión, el que evita que todos caigan sobre una
+      // misma cáscara y se lean como un anillo plano.
+      radius: 1.15 + rand() * 2.35,
+      // Distritos pequeños: con la red tejida dentro de cada uno, una nube
+      // ancha separaba demasiado sus propias anclas y los tramos se alargaban.
+      spread: 0.14 + rand() * 0.16,
+      weight: (0.55 + 0.7 * backness) * (0.7 + rand() * 0.6),
+    })
+  }
+
+  return list
+})()
+
+function districtCenter(d: District, figureHeight: number): [number, number, number] {
+  const az = (d.azimuth * Math.PI) / 180
+  const el = (d.elevation * Math.PI) / 180
+  const r = d.radius * figureHeight
+  return [
+    r * Math.cos(el) * Math.sin(az),
+    r * Math.sin(el),
+    r * Math.cos(el) * Math.cos(az),
+  ]
+}
+
+/**
+ * Red que enlaza la nube. La estructura es deliberadamente **local**: cada
+ * distrito teje su propia malla corta entre puntos de anclaje vecinos, y solo
+ * se tiende un enlace entre distritos cuando están lo bastante cerca.
+ *
+ * Antes esto era un único árbol de recubrimiento mínimo sobre todos los
+ * distritos. Un árbol de recubrimiento tiene que llegar a todos los nodos sí o
+ * sí, así que acababa tendiendo arcos larguísimos que cruzaban el encuadre de
+ * lado a lado, y el resultado era lo contrario de una red: pocas líneas muy
+ * largas separando zonas enteras vacías.
+ *
+ * Con mallas locales más enlaces por proximidad, el trazo es corto en todas
+ * partes y el vacío queda repartido en huecos pequeños entre nodos, en vez de
+ * concentrarse en dos o tres regiones grandes. La red se lee como tejido y no
+ * como cableado.
+ */
+function buildBranchNetwork(figureHeight: number): Float32Array {
+  const rand = seededRandom(0x5eed)
+  const vertices: number[] = []
+
+  const push = (a: number[], b: number[]) => {
+    vertices.push(a[0], a[1], a[2], b[0], b[1], b[2])
+  }
+
+  /**
+   * Traza un enlace partido en tramos con desvío, en lugar de un segmento
+   * recto. El desvío es proporcional a la longitud, así que los enlaces cortos
+   * salen casi rectos y solo los largos se arquean: es lo que evita que los
+   * tramos de dentro de un distrito parezcan garabatos.
+   */
+  const link = (a: number[], b: number[], steps: number, wobble: number) => {
+    const length = Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2])
+    const amount = length * wobble
+    let previous = a
+
+    for (let s = 1; s <= steps; s++) {
+      const t = s / steps
+      const arc = Math.sin(t * Math.PI)
+      const point =
+        s === steps
+          ? b
+          : [
+              a[0] + (b[0] - a[0]) * t + (rand() - 0.5) * amount * arc,
+              a[1] + (b[1] - a[1]) * t + (rand() - 0.5) * amount * arc,
+              a[2] + (b[2] - a[2]) * t + (rand() - 0.5) * amount * arc,
+            ]
+      push(previous, point)
+      previous = point
+    }
+  }
+
+  // Anclas de cada distrito: los nodos de su malla interna.
+  const anchors: number[][][] = DISTRICTS.map((district) => {
+    const [cx, cy, cz] = districtCenter(district, figureHeight)
+    const spread = district.spread * figureHeight
+    const count = 4 + Math.round(district.weight * 4)
+
+    return Array.from({ length: count }, () => {
+      const r = spread * (0.35 + rand() * 0.75)
+      const theta = rand() * Math.PI * 2
+      const phi = Math.acos(2 * rand() - 1)
+      return [
+        cx + r * Math.sin(phi) * Math.cos(theta),
+        cy + r * Math.cos(phi) * 0.8,
+        cz + r * Math.sin(phi) * Math.sin(theta),
+      ]
+    })
+  })
+
+  // Malla interna: cada ancla se enlaza con sus dos vecinas más próximas del
+  // mismo distrito. Dos y no todas contra todas —eso sería una retícula
+  // cerrada— ni una sola, que daría una cadena sin ramificar.
+  anchors.forEach((nodes) => {
+    nodes.forEach((node, i) => {
+      const neighbours = nodes
+        .map((other, j) => ({
+          other,
+          j,
+          dist: Math.hypot(node[0] - other[0], node[1] - other[1], node[2] - other[2]),
+        }))
+        .filter((entry) => entry.j !== i)
+        .sort((a, b) => a.dist - b.dist)
+        .slice(0, 2)
+
+      // Solo hacia adelante, o cada arista se dibujaría dos veces.
+      neighbours.filter((entry) => entry.j > i).forEach((entry) => link(node, entry.other, 2, 0.18))
+    })
+  })
+
+  /*
+   * Enlaces entre distritos, únicamente por proximidad. El umbral es lo que
+   * mantiene el equilibrio que se busca: sin él la red vuelve a cruzar el
+   * encuadre entero, y con él demasiado bajo los distritos quedan como islas
+   * sueltas y se pierde el efecto de red.
+   */
+  /*
+   * El umbral se deriva del número de distritos en vez de fijarse a mano. En
+   * una esfera de radio R con N puntos repartidos por área, la separación
+   * típica entre vecinos ronda 2R·√(π/N); el margen del 10% por encima es lo
+   * que hace que cada distrito enlace con sus vecinos inmediatos y con nadie
+   * más.
+   *
+   * Calcularlo así importa porque el umbral y el recuento están acoplados: al
+   * subir `DISTRICT_COUNT` los distritos se acercan entre sí, y un umbral fijo
+   * empezaría a enlazar también con los segundos y terceros vecinos hasta
+   * cerrar la red en una retícula. De este modo el tejido conserva su aspecto
+   * al cambiar la cantidad.
+   */
+  const MEAN_RADIUS = 2.3
+  const MAX_LINK = figureHeight * 2 * MEAN_RADIUS * Math.sqrt(Math.PI / DISTRICT_COUNT) * 1.1
+  const centers = DISTRICTS.map((d) => districtCenter(d, figureHeight))
+
+  for (let i = 0; i < centers.length; i++) {
+    for (let j = i + 1; j < centers.length; j++) {
+      const dist = Math.hypot(
+        centers[i][0] - centers[j][0],
+        centers[i][1] - centers[j][1],
+        centers[i][2] - centers[j][2],
+      )
+      if (dist > MAX_LINK) continue
+
+      // Se enlazan las anclas más próximas entre los dos distritos, no los
+      // centros: así el trazo nace del borde del tejido y no lo atraviesa.
+      let best = { a: anchors[i][0], b: anchors[j][0], dist: Infinity }
+      for (const a of anchors[i]) {
+        for (const b of anchors[j]) {
+          const d = Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2])
+          if (d < best.dist) best = { a, b, dist: d }
+        }
+      }
+      link(best.a, best.b, 4, 0.12)
+    }
+  }
+
+  return new Float32Array(vertices)
+}
+
+/**
+ * Red ramificada entre distritos. Va en blending normal y no aditivo: las
+ * ramas se cruzan entre sí y con la nube, y en aditivo cada cruce se volvía un
+ * nudo brillante que en el pase de caracteres saltaba dos o tres glifos de la
+ * rampa.
+ */
+function BranchNetwork({
+  figureHeight,
+  nearColor,
+  farColor,
+}: {
+  figureHeight: number
+  nearColor: string
+  farColor: string
+}) {
+  const materialRef = useRef<ShaderMaterial>(null)
+  const groupRef = useRef<any>(null)
+
+  const geometry = useMemo(() => {
+    const geo = new ThreeBufferGeometry()
+    geo.setAttribute("position", new BufferAttribute(buildBranchNetwork(figureHeight), 3))
+    return geo
+  }, [figureHeight])
+
+  useEffect(() => () => geometry.dispose(), [geometry])
+
+  const uniforms = useMemo(
+    () => ({
+      uTime: { value: 0 },
+      uNear: { value: new Color(nearColor) },
+      uFar: { value: new Color(farColor) },
+      uFogNear: { value: figureHeight * 0.8 },
+      uFogFar: { value: figureHeight * 4.2 },
+    }),
+    [figureHeight, nearColor, farColor],
+  )
+
+  useFrame((state, delta) => {
+    if (materialRef.current) materialRef.current.uniforms.uTime.value += delta
+    // La red gira solidaria con la nube: si derivaran a ritmos distintos, las
+    // ramas se despegarían de los distritos que enlazan.
+    if (groupRef.current) groupRef.current.rotation.y = state.clock.elapsedTime * 0.014
+  })
+
+  return (
+    <lineSegments ref={groupRef} geometry={geometry} frustumCulled={false}>
+      <shaderMaterial
+        ref={materialRef}
+        uniforms={uniforms}
+        transparent
+        depthWrite={false}
+        vertexShader={`
+          uniform float uFogNear;
+          uniform float uFogFar;
+          varying float vDepth;
+
+          void main() {
+            vec4 viewPosition = modelViewMatrix * vec4(position, 1.0);
+            vDepth = clamp((-viewPosition.z - uFogNear) / (uFogFar - uFogNear), 0.0, 1.0);
+            gl_Position = projectionMatrix * viewPosition;
+          }
+        `}
+        fragmentShader={`
+          uniform vec3 uNear;
+          uniform vec3 uFar;
+          varying float vDepth;
+
+          void main() {
+            // La profundidad se dice dos veces, en color y en opacidad. Solo con
+            // opacidad el fondo se lee como niebla gris; el viraje a frío es lo
+            // que hace que la distancia se perciba como distancia.
+            // Opacidad baja a propósito. En WebGL el grosor de línea no se
+            // puede cambiar: linewidth se ignora en casi todas las plataformas
+            // y toda línea sale de un píxel. Así que "más fina" se
+            // consigue por transparencia: es lo que la vuelve un tejido sutil
+            // en vez de un cableado marcado.
+            vec3 color = mix(uNear, uFar, vDepth);
+            float alpha = mix(0.26, 0.04, vDepth);
+            gl_FragColor = vec4(color, alpha);
+          }
+        `}
+      />
+    </lineSegments>
+  )
+}
+
+/**
  * Campo de partículas que envuelve a la figura. Vive dentro del lienzo, y no
  * como capa de HTML encima, por tres razones: comparte la cámara —así el
  * paralaje entre las partículas cercanas y las lejanas es real y no simulado—,
  * queda ocluido por el cuerpo cuando pasa por detrás, y entra en el pase de
  * caracteres igual que el resto de la escena.
+ *
+ * Los puntos no se reparten por igual: la mayor parte se agrupa en los
+ * distritos de `DISTRICTS` y el resto queda como bruma de relleno, para que el
+ * espacio entre agrupaciones no se vea vacío. La densidad es el dato: un
+ * distrito no es un objeto con contorno, es una zona donde hay más puntos.
  */
 function ParticleField({
   count = 1200,
@@ -266,27 +614,59 @@ function ParticleField({
   const figureHeight = MODEL_TARGET_HEIGHT * scale
 
   const geometry = useMemo(() => {
+    const rand = seededRandom(0xc17a)
     const positions = new Float32Array(count * 3)
     const seeds = new Float32Array(count)
 
-    for (let i = 0; i < count; i++) {
-      /*
-       * Distribución en cáscara esférica con raíz cúbica del azar: repartir el
-       * radio de forma uniforme amontonaría casi todo cerca del centro, porque
-       * el volumen crece con el cubo del radio. Así la nube se ve pareja de
-       * densidad a cualquier distancia.
-       */
-      const radius = figureHeight * (0.55 + Math.cbrt(Math.random()) * 2.4)
-      const theta = Math.random() * Math.PI * 2
-      // acos de un valor uniforme evita que los puntos se apelotonen en los polos.
-      const phi = Math.acos(2 * Math.random() - 1)
+    // Dos tercios a los distritos y uno a la bruma. Con más proporción de bruma
+    // las agrupaciones dejan de leerse como agrupaciones; con menos, el espacio
+    // entre ellas se abre y el fondo se parte en islas sueltas.
+    const clustered = Math.floor(count * 0.68)
+    const totalWeight = DISTRICTS.reduce((sum, d) => sum + d.weight, 0)
 
-      positions[i * 3] = radius * Math.sin(phi) * Math.cos(theta)
+    let index = 0
+
+    DISTRICTS.forEach((district, di) => {
+      const share = Math.round((district.weight / totalWeight) * clustered)
+      const [cx, cy, cz] = districtCenter(district, figureHeight)
+      const spread = district.spread * figureHeight
+
+      for (let i = 0; i < share && index < clustered; i++, index++) {
+        /*
+         * Radio con potencia 1.6 en vez de lineal: concentra los puntos hacia
+         * el centro del distrito y deja la periferia deshilachada. Repartir el
+         * radio de forma uniforme daba una bola de densidad plana con un borde
+         * neto, que se leía como un objeto sólido y no como una aglomeración.
+         */
+        const r = spread * Math.pow(rand(), 1.6)
+        const theta = rand() * Math.PI * 2
+        const phi = Math.acos(2 * rand() - 1)
+
+        positions[index * 3] = cx + r * Math.sin(phi) * Math.cos(theta)
+        positions[index * 3 + 1] = cy + r * Math.cos(phi) * 0.8
+        positions[index * 3 + 2] = cz + r * Math.sin(phi) * Math.sin(theta)
+        seeds[index] = rand()
+      }
+      void di
+    })
+
+    for (; index < count; index++) {
+      /*
+       * Bruma de relleno en cáscara esférica con raíz cúbica del azar: repartir
+       * el radio de forma uniforme amontonaría casi todo cerca del centro,
+       * porque el volumen crece con el cubo del radio.
+       */
+      const radius = figureHeight * (0.55 + Math.cbrt(rand()) * 2.4)
+      const theta = rand() * Math.PI * 2
+      // acos de un valor uniforme evita que los puntos se apelotonen en los polos.
+      const phi = Math.acos(2 * rand() - 1)
+
+      positions[index * 3] = radius * Math.sin(phi) * Math.cos(theta)
       // Achatada en vertical: la figura es alta y estrecha, y una nube esférica
       // dejaba un halo desproporcionado por encima de la cabeza.
-      positions[i * 3 + 1] = radius * Math.cos(phi) * 0.7
-      positions[i * 3 + 2] = radius * Math.sin(phi) * Math.sin(theta)
-      seeds[i] = Math.random()
+      positions[index * 3 + 1] = radius * Math.cos(phi) * 0.7
+      positions[index * 3 + 2] = radius * Math.sin(phi) * Math.sin(theta)
+      seeds[index] = rand()
     }
 
     const geo = new ThreeBufferGeometry()
@@ -306,8 +686,11 @@ function ParticleField({
       uTime: { value: 0 },
       uColor: { value: [0.49, 0.8, 0.99] },
       uSize: { value: 2.6 },
+      uFar: { value: new Color(FAR_COLOR) },
+      uFogNear: { value: figureHeight * 0.8 },
+      uFogFar: { value: figureHeight * 4.2 },
     }),
-    [],
+    [figureHeight],
   )
 
   useFrame((state, delta) => {
@@ -338,8 +721,11 @@ function ParticleField({
         vertexShader={`
           uniform float uTime;
           uniform float uSize;
+          uniform float uFogNear;
+          uniform float uFogFar;
           attribute float aSeed;
           varying float vTwinkle;
+          varying float vDepth;
 
           void main() {
             vec4 viewPosition = modelViewMatrix * vec4(position, 1.0);
@@ -348,22 +734,35 @@ function ParticleField({
             // latiría a la vez y se leería como un fundido de la capa entera.
             vTwinkle = 0.35 + 0.65 * (0.5 + 0.5 * sin(uTime * (0.4 + aSeed * 0.9) + aSeed * 40.0));
 
-            // Atenuación por distancia: es lo que construye la profundidad.
+            vDepth = clamp((-viewPosition.z - uFogNear) / (uFogFar - uFogNear), 0.0, 1.0);
+
+            // Atenuación de tamaño por distancia: es lo que construye la
+            // profundidad geométrica. El brillo se atenúa aparte, en el
+            // fragmento; el tamaño solo no basta, porque un punto lejano
+            // pequeño pero a pleno brillo sigue leyéndose como cercano.
             gl_PointSize = uSize * (0.5 + aSeed) * (14.0 / max(-viewPosition.z, 0.1));
             gl_Position = projectionMatrix * viewPosition;
           }
         `}
         fragmentShader={`
           uniform vec3 uColor;
+          uniform vec3 uFar;
           varying float vTwinkle;
+          varying float vDepth;
 
           void main() {
             // Punto redondo con borde suave: el cuadrado por defecto delata la
             // rejilla de píxeles en las partículas grandes.
             float d = length(gl_PointCoord - vec2(0.5));
             if (d > 0.5) discard;
-            float alpha = smoothstep(0.5, 0.05, d) * vTwinkle * 0.55;
-            gl_FragColor = vec4(uColor, alpha);
+
+            // Perspectiva aérea: lo lejano vira al frío y pierde contraste, que
+            // es la única señal de distancia que sobrevive al pase de
+            // caracteres —el ASCII colapsa el color a luminancia, así que la
+            // profundidad tiene que estar también en el brillo.
+            vec3 color = mix(uColor, uFar, vDepth);
+            float alpha = smoothstep(0.5, 0.05, d) * vTwinkle * mix(0.55, 0.12, vDepth);
+            gl_FragColor = vec4(color, alpha);
           }
         `}
       />
@@ -379,6 +778,7 @@ function Figure({
   progressRef = null,
   freeLook = false,
   wireframe = true,
+  monochrome = false,
   distortion = 1,
   pointerDeform = 0,
 }: {
@@ -386,6 +786,7 @@ function Figure({
   intensity?: number
   scale?: number
   wireframe?: boolean
+  monochrome?: boolean
   distortion?: number
   pointerDeform?: number
   orbit?: CameraKey[] | null
@@ -467,6 +868,7 @@ function Figure({
       uAccentColor: { value: [0.49, 0.8, 0.99] },
       uIntensity: { value: 1 },
       uShading: { value: 0 },
+      uMonochrome: { value: 0 },
       uDistort: { value: 1 },
       uAspect: { value: 1 },
       uPointerRadius: { value: 0.28 },
@@ -488,6 +890,12 @@ function Figure({
       materialRef.current.uniforms.uShading.value = wireframe ? 0 : 1
     }
   }, [wireframe])
+
+  useEffect(() => {
+    if (materialRef.current) {
+      materialRef.current.uniforms.uMonochrome.value = monochrome ? 1 : 0
+    }
+  }, [monochrome])
 
   useEffect(() => {
     if (materialRef.current) {
@@ -702,6 +1110,7 @@ function Figure({
     uniform vec3 uAccentColor;
     uniform float uIntensity;
     uniform float uShading;
+    uniform float uMonochrome;
     uniform float uDistort;
     varying float vPointer;
     varying vec2 vUv;
@@ -814,22 +1223,83 @@ function Figure({
       // Fresnel: refuerza el borde de silueta, donde la normal es perpendicular.
       float fresnel = pow(1.0 - max(dot(normal, normalize(vViewDir)), 0.0), 2.4);
 
-      float lighting = 0.10 + key * 0.95 + fill * 0.22 + rim * 0.45 + fresnel * 0.35;
+      /*
+       * Cada luz lleva su propia temperatura, y ahí está la profundidad
+       * cromática: antes las tres sumaban a un único escalar que después se
+       * teñía de azul, así que la imagen era monocroma y el volumen dependía
+       * solo del brillo. Con la clave cálida y el relleno frío, la cara girada
+       * hacia la luz y la que queda en sombra se distinguen por color y no
+       * únicamente por valor, que es como se ilumina un retrato de verdad.
+       */
+      /*
+       * Las dos luces comparten familia cromática, y esto no es una preferencia
+       * sino un requisito del pase de caracteres.
+       *
+       * El ASCII normaliza cada celda dividiéndola por su propia luminancia. Esa
+       * división no traslada el color: lo lleva al extremo de saturación. Con una
+       * clave cálida y un relleno frío, dos celdas vecinas que apenas difieren en
+       * temperatura salían de ahí convertidas en naranja puro y azul puro, y la
+       * figura se cubría de motas de colores opuestos —confeti, no volumen—. Un
+       * degradado de temperatura que en un render normal es suave, aquí se
+       * rompe en píxeles.
+       *
+       * Con ambas luces en el mismo hue, la normalización ya no tiene hues que
+       * enfrentar: solo puede mover el valor, que es justo lo que el glifo ya
+       * expresa. El volumen vuelve a leerse por densidad de carácter, que es el
+       * lenguaje de esta imagen, y el cian mantiene la escena en la paleta de la
+       * marca en vez de pelearse con ella.
+       */
+      vec3 keyTint  = vec3(0.64, 0.87, 1.00);
+      vec3 fillTint = vec3(0.24, 0.42, 0.72);
 
-      float intensity = 0.4 + vDisplacement * 4.0;
-      // uShading deja el acabado de alambre como estaba y aplica el volumen
-      // solo donde hace falta: en la superficie que alimenta al ASCII.
-      intensity = mix(intensity, lighting, uShading);
-      vec3 baseColor = vec3(intensity) * vec3(0.72, 0.85, 1.0);
+      vec3 lit = vec3(0.05, 0.06, 0.09)
+               + keyTint * key * 0.92
+               + fillTint * fill * 0.34
+               // El contra y el fresnel van en el acento del capítulo: el color
+               // narrativo entra por el contorno, que es donde no compite con
+               // el modelado del rostro.
+               + uAccentColor * rim * 0.55
+               + uAccentColor * fresnel * 0.42;
 
-      float line = smoothstep(0.0, 0.02, abs(fract(vUv.x * 20.0) - 0.5));
-      line *= smoothstep(0.0, 0.02, abs(fract(vUv.y * 20.0) - 0.5));
+      // El acabado de alambre se queda como estaba: ahí no hay superficie que
+      // modelar y el sombreado por normales no aporta nada.
+      float wire = 0.4 + vDisplacement * 4.0;
+      vec3 baseColor = mix(vec3(wire) * vec3(0.72, 0.85, 1.0), lit, uShading);
 
-      vec3 finalColor = mix(baseColor, uAccentColor, clamp(totalSparkle * 0.92, 0.0, 1.0));
+      /*
+       * El centelleo pasa de reemplazar el color a solo empujarlo. Mezclaba el
+       * acento con peso 0.92, de modo que en cada destello la celda perdía casi
+       * todo el sombreado y se aplanaba: eso era lo que deshacía la imagen. Y
+       * como el patrón vive en espacio UV mientras la malla se deforma, las
+       * manchas nadaban sobre la superficie. Al 0.30 el destello se lee como un
+       * brillo sobre el volumen en lugar de borrarlo.
+       */
+      vec3 finalColor = mix(baseColor, uAccentColor, clamp(totalSparkle * 0.30, 0.0, 1.0));
       // La zona tocada por el puntero se enciende un poco: sin ello el relieve
       // se pierde en los planos donde la superficie ya es casi plana.
-      finalColor = mix(finalColor, uAccentColor, clamp(vPointer * 0.55, 0.0, 1.0));
-      finalColor = finalColor * (1.0 - line * 0.5);
+      finalColor = mix(finalColor, uAccentColor, clamp(vPointer * 0.25, 0.0, 1.0));
+
+      /*
+       * Aquí iba una retícula fract(vUv * 20.0) que oscurecía el color hasta
+       * la mitad. Se ha quitado: era una segunda cuadrícula en espacio UV que
+       * batía contra la cuadrícula de celdas del pase de caracteres, y ese
+       * batido es moiré por construcción.
+       */
+
+      /*
+       * Paso a gris, al final de todo y no luz por luz: así el sombreado, el
+       * centelleo y el acento del contorno siguen calculándose en color y solo
+       * se convierten al escribir. Cada uno aporta su valor —el contra sigue
+       * despegando la silueta, el fresnel sigue marcando el borde—, pero el
+       * resultado entra al pase de caracteres como un único canal.
+       *
+       * Se pesa con los coeficientes de luminancia de Rec. 709 en vez de
+       * promediar los tres canales: el ojo es mucho más sensible al verde que
+       * al azul, y el promedio plano aclaraba el relleno azul de las sombras
+       * hasta igualarlo con la luz clave, borrando el modelado.
+       */
+      float grey = dot(finalColor, vec3(0.2126, 0.7152, 0.0722));
+      finalColor = mix(finalColor, vec3(grey), uMonochrome);
 
       float alpha = clamp(0.5 * uIntensity + 0.14 + totalSparkle * 0.36, 0.15, 1.0);
       // Con volumen, la superficie es opaca: la transparencia mezclaría caras
@@ -886,27 +1356,73 @@ function Figure({
           }
         : null
 
-      // El progreso se reparte entre las claves; el tramo se suaviza con
-      // smoothstep para que la cámara entre y salga de cada plano sin tirón,
-      // en vez de cambiar de velocidad de golpe en cada nudo.
       const scaled = progress * (orbit.length - 1)
       const index = Math.min(Math.floor(scaled), orbit.length - 2)
-      const local = MathUtils.smoothstep(scaled - index, 0, 1)
-      const from = orbit[index]
-      const to = orbit[index + 1]
+      const raw = scaled - index
+
+      /*
+       * Suavizado del tramo, a medio camino entre lineal y smoothstep.
+       *
+       * Con smoothstep puro la velocidad es nula en cada clave y máxima en el
+       * centro del tramo: la cámara se paraba en cada plano y **cruzaba el
+       * trayecto a 1.5 veces la velocidad media**. Ese pico intermedio era buena
+       * parte de la sensación de precipitación. Mezclado a medias con la rampa
+       * lineal, el pico baja a 1.25 y el movimiento se reparte, conservando algo
+       * de asentamiento al llegar a cada plano.
+       */
+      const local = MathUtils.lerp(raw, MathUtils.smoothstep(raw, 0, 1), 0.5)
+
+      /*
+       * Interpolación de Catmull-Rom sobre cuatro claves en vez de lineal entre
+       * dos.
+       *
+       * Este era el defecto de fondo. Interpolando linealmente, dentro de cada
+       * tramo la cámara va en línea recta y **al llegar a una clave cambia de
+       * dirección de golpe**: por muy suave que sea la curva de tiempo, la
+       * trayectoria tiene un pico en cada nudo, y un quiebro se percibe como
+       * tirón. Catmull-Rom pasa por las mismas claves pero llega a cada una con
+       * la dirección que ya trae y sale con la que va a necesitar, así que el
+       * recorrido es una curva continua de principio a fin. De ahí viene lo
+       * orgánico: no es que vaya más lento, es que deja de tener esquinas.
+       */
+      const at = (i: number) => orbit[MathUtils.clamp(i, 0, orbit.length - 1)]
+
+      const spline = (pick: (key: CameraKey) => number) => {
+        const a = pick(at(index - 1))
+        const b = pick(at(index))
+        const c = pick(at(index + 1))
+        const d = pick(at(index + 2))
+        const t2 = local * local
+        const t3 = t2 * local
+        return (
+          0.5 *
+          (2 * b +
+            (-a + c) * local +
+            (2 * a - 5 * b + 4 * c - d) * t2 +
+            (-a + 3 * b - 3 * c + d) * t3)
+        )
+      }
 
       const goal = free ?? {
-        azimuth: MathUtils.lerp(from.azimuth, to.azimuth, local),
-        elevation: MathUtils.lerp(from.elevation, to.elevation, local),
-        radius: MathUtils.lerp(from.radius, to.radius, local),
-        target: MathUtils.lerp(from.target, to.target, local),
-        frameX: MathUtils.lerp(from.frameX ?? 0, to.frameX ?? 0, local),
-        frameY: MathUtils.lerp(from.frameY ?? 0, to.frameY ?? 0, local),
+        azimuth: spline((k) => k.azimuth),
+        elevation: spline((k) => k.elevation),
+        // La curva se sale un poco de los valores que atraviesa —es lo que le da
+        // el rebote natural—, pero en el radio ese margen acercaría la cámara
+        // más que en ninguna clave y podría meterla dentro de la cabeza.
+        radius: MathUtils.clamp(spline((k) => k.radius), 0.17, 0.56),
+        target: spline((k) => k.target),
+        frameX: spline((k) => k.frameX ?? 0),
+        frameY: spline((k) => k.frameY ?? 0),
       }
 
       // Amortiguación por delta: el resultado no depende de los fps. La primera
       // vez se coloca en seco, si no la cámara entraría volando desde el origen.
-      const k = orbitReadyRef.current ? 1 - Math.exp(-4.5 * delta) : 1
+      //
+      // Bajada de 4.5 a 2.2: la cámara sigue al scroll con algo más de retraso y
+      // llega a su sitio arrastrando, en lugar de pegarse al gesto. Es lo que
+      // aporta peso; subirlo la vuelve nerviosa y bajarlo mucho más la
+      // desconecta del scroll.
+      const k = orbitReadyRef.current ? 1 - Math.exp(-2.2 * delta) : 1
       orbitReadyRef.current = true
 
       const o = orbitRef.current
@@ -1085,6 +1601,8 @@ export function SentientFigure({
   orbit = null,
   progressRef = null,
   texture = "wireframe",
+  asciiPreset = "ink",
+  monochrome = false,
   distortion = 1,
   pointerDeform = 0,
   particles = 0,
@@ -1100,6 +1618,10 @@ export function SentientFigure({
   progressRef?: { current: number } | null
   /** Acabado de la figura: malla de alambre o render en caracteres. */
   texture?: "wireframe" | "ascii"
+  /** Familia de símbolos del render en caracteres. Solo con texture="ascii". */
+  asciiPreset?: AsciiPresetId
+  /** Pasa la figura a escala de grises. El fondo conserva su color. */
+  monochrome?: boolean
   /** Multiplica la deformación de la malla. 1 es el valor histórico. */
   distortion?: number
   /** Intensidad del bulto que sigue al cursor sobre la figura. 0 lo desactiva. */
@@ -1138,14 +1660,26 @@ export function SentientFigure({
           }}
           style={{ pointerEvents: "auto", touchAction: "none" }}
         >
-          <ambientLight intensity={0.5} />
-          {texture === "ascii" && <AsciiPass />}
+          {/*
+            No hay luces de three en la escena: tanto la figura como el fondo
+            usan `ShaderMaterial` con el sombreado escrito a mano, y ningún
+            material de estos recibe las luces del grafo. Aquí vivía un
+            `<ambientLight>` que no iluminaba nada.
+          */}
+          {texture === "ascii" && <AsciiPass preset={asciiPreset} />}
           {particles > 0 && (
-            <ParticleField
-              count={particles}
-              accentColor={activeMood?.color ?? accentColor}
-              scale={scale}
-            />
+            <>
+              <ParticleField
+                count={particles}
+                accentColor={activeMood?.color ?? accentColor}
+                scale={scale}
+              />
+              <BranchNetwork
+                figureHeight={MODEL_TARGET_HEIGHT * scale}
+                nearColor={activeMood?.color ?? accentColor}
+                farColor={FAR_COLOR}
+              />
+            </>
           )}
           <Suspense fallback={null}>
             <Figure
@@ -1156,6 +1690,7 @@ export function SentientFigure({
               progressRef={progressRef}
               freeLook={freeLook}
               wireframe={texture !== "ascii"}
+              monochrome={monochrome}
               distortion={distortion}
               pointerDeform={pointerDeform}
             />
