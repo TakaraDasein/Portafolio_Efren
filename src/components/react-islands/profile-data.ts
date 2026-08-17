@@ -44,15 +44,93 @@ export const PROFILE_STATEMENTS = [
   },
 ] as const
 
-/** El ciclo de vida del dato, agrupado por la herramienta que uso en cada tramo. */
+/**
+ * Portada de la línea de investigación: el capítulo que antecede a los
+ * proyectos y les da un marco común. Evita «desastres naturales» a propósito
+ * —en el vocabulario del sector la amenaza es natural, el desastre no: depende
+ * de la vulnerabilidad que encuentra— y es justo lo que miden estos trabajos.
+ */
+export const RESEARCH_LINE = {
+  kicker: "Línea de investigación",
+  title: "Cartografías",
+  titleAccent: "del riesgo",
+  lead:
+    "Conflicto armado y amenaza climática en Colombia: dónde se concentra el daño y sobre quién recae.",
+} as const
+
+export type FeaturedProject = {
+  id: string
+  title: string
+  year: string
+  /** Herramienta con la que se publicó, tal y como se muestra en pantalla. */
+  tool: string
+  tags: string[]
+  url: string
+  /** Captura del proyecto. Vive en `public/`, así que la ruta es absoluta. */
+  thumbnail: string
+}
+
+/**
+ * Selección para el capítulo 02 del recorrido. No es el catálogo completo —ese
+ * vive en las páginas temáticas—: son cuatro piezas escogidas a mano. Tres
+ * lecturas del conflicto colombiano a distintas escalas y un cierre ambiental
+ * que además muestra desarrollo propio y no solo Tableau.
+ */
+export const FEATURED_PROJECTS: FeaturedProject[] = [
+  {
+    id: "geovisor-multivariado",
+    title: "Geovisor multivariado · riesgo de reclutamiento, Cauca",
+    year: "2023",
+    tool: "Tableau",
+    tags: ["Protección infantil", "Multivariado", "Riesgo"],
+    url: "https://public.tableau.com/views/DATALABGeovisormultivariadoEND/Historia",
+    thumbnail: "/proyectos/1.geovisor-multivariado.png",
+  },
+  {
+    id: "grupos-armados",
+    title: "Presencia de grupos armados en Colombia",
+    year: "2023",
+    tool: "Tableau",
+    tags: ["Conflicto", "Territorial", "Seguridad"],
+    url: "https://public.tableau.com/views/PresenciadegruposarmadosenColombia2023DataLabConsulting/DataLabConsulting",
+    thumbnail: "/proyectos/4.grupos-armados.png",
+  },
+  {
+    id: "historico-desapariciones",
+    title: "Histórico de desapariciones en Colombia",
+    year: "2023",
+    tool: "Tableau",
+    tags: ["Derechos humanos", "Geoespacial", "Histórico"],
+    url: "https://public.tableau.com/views/HistoricodedesaparicionesenColombia/Dashboard1",
+    thumbnail: "/proyectos/7.historico-desapariciones.png",
+  },
+  {
+    id: "riesgo-climatico",
+    title: "Índice de riesgo climático en Colombia",
+    year: "2025",
+    tool: "Web",
+    tags: ["Clima", "Riesgo", "Territorial"],
+    url: "https://indice-riesgo-climatico-colombia.vercel.app/",
+    thumbnail: "/proyectos/11.riesgo-climatico.jpeg",
+  },
+]
+
+/**
+ * El ciclo de vida del dato, un tramo por herramienta. El orden es el del dato
+ * y no el de la carrera: empieza donde se captura y termina donde se decide.
+ *
+ * Los dos tramos de los extremos —ingesta automatizada e inteligencia
+ * artificial— son los que describen el trabajo actual en V1TR0 y no aparecían
+ * en la versión anterior, que se detenía en la visualización.
+ */
 export const STACK_GROUPS = [
   {
-    id: "eda",
+    id: "ingesta",
     accent: "#7dd3fc",
     stage: "01",
-    title: "Análisis exploratorio",
-    caption: "EDA según las necesidades del proyecto",
-    tools: ["Python", "Pandas", "NumPy", "Matplotlib", "Seaborn", "R"],
+    title: "Ingesta y automatización",
+    caption: "Captura programada en origen",
+    tools: ["Python", "FastAPI", "Selenium", "APIs", "Pipelines"],
   },
   {
     id: "consultas",
@@ -63,20 +141,36 @@ export const STACK_GROUPS = [
     tools: ["SQL", "MySQL", "PostgreSQL", "MongoDB"],
   },
   {
+    id: "eda",
+    accent: "#10b981",
+    stage: "03",
+    title: "Análisis exploratorio",
+    caption: "EDA según las necesidades del proyecto",
+    tools: ["Pandas", "NumPy", "Matplotlib", "Seaborn", "R"],
+  },
+  {
     id: "microsoft",
     accent: "#fb923c",
-    stage: "03",
+    stage: "04",
     title: "Modelado y BI",
     caption: "Suite completa dentro del ecosistema Microsoft",
     tools: ["Power BI", "Power Query", "ETL", "DAX", "Tableau"],
   },
   {
     id: "open-source",
-    accent: "#10b981",
-    stage: "04",
+    accent: "#f472b6",
+    stage: "05",
     title: "Visualización open source",
     caption: "La tecnología libre más adecuada según el contexto",
-    tools: ["D3.js", "Recharts"],
+    tools: ["D3.js", "Recharts", "Tableau Public"],
+  },
+  {
+    id: "ia",
+    accent: "#a78bfa",
+    stage: "06",
+    title: "Inteligencia artificial",
+    caption: "Capa transversal sobre el dato ya gobernado",
+    tools: ["LLMs", "RAG", "Agentes", "Clasificación", "Predicción"],
   },
 ] as const
 
@@ -87,6 +181,7 @@ export const USE_CASES = [
   "Automatización de procesos",
   "Análisis predictivo",
   "Dashboards interactivos",
+  "Asistentes sobre datos propios",
 ] as const
 
 export type Experience = {

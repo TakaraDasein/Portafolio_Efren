@@ -243,7 +243,11 @@ export const ASCENDING_ORBIT: CameraKey[] = [
   // V1TR0 y la pausa intercambiaron su lugar en el recorrido; sus claves van
   // con ellos para que cada capítulo conserve el encuadre con el que se diseñó.
   { azimuth: -38, elevation: -7, radius: 0.32, target: BODY.rostro, frameX: -0.38, label: "Contrapicado derecho" },
-  { azimuth: 8, elevation: 13, radius: 0.50, target: BODY.rostro, frameX: 0, label: "Picado frontal" },
+  // La pausa es el único capítulo con el texto centrado a todo el ancho, así que
+  // no hay lado libre donde apartar la figura: `frameX` tiene que seguir en 0 y
+  // la separación se busca en vertical. `frameY` positivo sube al personaje
+  // dentro del cuadro y deja el rostro por encima de la cita.
+  { azimuth: 8, elevation: 13, radius: 0.50, target: BODY.rostro, frameX: 0, frameY: 0.34, label: "Picado frontal" },
   { azimuth: 44, elevation: 10, radius: 0.24, target: BODY.rostro, frameX: 0.38, label: "Picado corto" },
   { azimuth: -55, elevation: -8, radius: 0.34, target: BODY.rostro, frameX: -0.38, label: "Perfil derecho" },
   { azimuth: 22, elevation: 4, radius: 0.22, target: BODY.rostro, frameX: 0.38, label: "Frontal corto" },
@@ -1195,9 +1199,20 @@ function Figure({
                       twinkle *
                       blobMask;
 
+      /*
+       * La fase del centelleo de borde salía de vUv.x * 10.0, es decir, de una
+       * función lineal de la coordenada horizontal: eso son diez franjas
+       * verticales recorriendo la superficie. En color apenas se notaban, pero
+       * con la figura en escala de grises la mezcla de acento se convierte en un
+       * cambio de brillo, y el pase de caracteres lo traduce en columnas de
+       * glifos distintos. De ahí las rayas.
+       *
+       * Ahora la fase viene solo del azar por celda, que no tiene gradiente
+       * espacial y por tanto no puede formar bandas.
+       */
       float edgeSpeed = mix(0.45, 1.0, sparklePattern);
       float edgeSparkle = smoothstep(0.7, 1.0, vDisplacement * 4.0) *
-                          (sin(uTime * edgeSpeed + vUv.x * 10.0 + sparklePattern * 20.0) * 0.5 + 0.5);
+                          (sin(uTime * edgeSpeed + sparklePattern * 20.0) * 0.5 + 0.5);
 
       // El centelleo acompaña a la deformación: si se reduce una y no el otro,
       // la superficie queda quieta pero parpadeando, que se lee como ruido.
